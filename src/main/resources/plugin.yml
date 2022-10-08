@@ -1,0 +1,20 @@
+name: FoodDecay
+version: '${project.version}'
+main: com.redchestraven.food.fooddecay.FoodDecay
+api-version: 1.18
+prefix: FoodDecay
+authors: [ RedChestRaven ]
+description: A small plugin to allow for all (vanilla) foods decaying
+commands:
+  fd verify:
+    description: Used to make sure there's no errors in the config.
+    permission: fooddecay.admin
+    permission-message: You don't have the right to wield this power!
+    aliases:
+      - fdverify
+  fd reload:
+    description: Used to reload changes made to the config. Make sure to verify it!
+    permission: fooddecay.admin
+    permission-message: You don't have the right to wield this power!
+    aliases:
+      - fdreload

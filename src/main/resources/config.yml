@@ -1,0 +1,40 @@
+# The materials you wish to have decayed.
+# !!! CAUTION !!!
+# !!! Currently can trigger ANY material listed on https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html !!!
+DecayingFoods:
+  - 'Beef'
+  - 'Chicken'
+  - 'Porkchop'
+  - 'Cod'
+  - 'Salmon'
+
+# These materials will stop decay while they're in the same inventory as items in DecayingFoods
+# !!! CAUTION !!!
+# !!! Will only respond to any materials with the word 'ice' in them !!!
+DecayStoppers:
+  - 'Ice'
+  - 'Packed Ice'
+  - 'blue ice'
+
+RateOfDecay: 120 #in seconds
+DecayCheckInterval: 10 #in seconds
+
+# !!! CAUTION !!!
+# !!! Below are advanced settings, and are only meant to be changed if you understand the repercussions !!!
+
+# These events are directly tied to when decaying foods are checked if they have their time of decay, and add it if it isn't yet.
+# The default values should offer a more, if not most, optimized net to catch all situations. If it still falls short,
+# you can turn more checks on at the risk of reducing performance.
+OnDropFromBlockBreak: true
+OnContainerLootGenerated: true
+OnDropFromEntityDeath: true
+OnFishedUp: true
+OnPickupByPlayer: false
+OnPickupByHopper: false
+OnNonPlayerMoveToOtherInventory: false
+OnPlayerPickupFromOtherInventory: false
+
+# !!! CAUTION !!!
+# !!! Messing with the values under here might seriously break the plugin !!!
+# !!! Under no circumstance, change these values !!!
+Version: 1
