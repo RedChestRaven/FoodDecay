@@ -32,7 +32,8 @@ public final class DecayHandler implements Listener
 	private static JavaPlugin _plugin;
 	private static final CustomDataKeys _customDataKeys = new CustomDataKeys();
 	private static final Logger logger = Logger.getLogger("FoodDecay");
-	private static final DateFormat _timeFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+	private static final DateFormat _internalTimeFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+	private static final DateFormat _loreTimeFormat = new SimpleDateFormat("dd MMM HH:mm");
 	private static ContainerChecker _containerChecker;
 	private static StorageEntityChecker _storageEntityChecker;
 	private static int _decayCheckerTaskId = -1;
@@ -200,7 +201,7 @@ public final class DecayHandler implements Listener
 		String[] foodDecayTimestamp = _foodDecayTimestamp.split("-");
 
 		Date nowDate = calendar.getTime();
-		logger.info("Now: " + _timeFormat.format(calendar.getTime()));
+		logger.info("Now: " + _internalTimeFormat.format(calendar.getTime()));
 
 		calendar.set(Integer.parseInt(foodDecayTimestamp[0]),		//Year
 				Integer.parseInt(foodDecayTimestamp[1]) - 1,	//Month, only one that starts at 0, so need to do -1 for the right month
@@ -208,7 +209,7 @@ public final class DecayHandler implements Listener
 				Integer.parseInt(foodDecayTimestamp[3]),			//Hour
 				Integer.parseInt(foodDecayTimestamp[4]),			//Minute
 				Integer.parseInt(foodDecayTimestamp[5]));			//Second
-		logger.info("ExpirationTime: " + _timeFormat.format(calendar.getTime()));
+		logger.info("ExpirationTime: " + _internalTimeFormat.format(calendar.getTime()));
 
 		return calendar.getTime().before(nowDate);
 	}
@@ -225,7 +226,15 @@ public final class DecayHandler implements Listener
 				//logger.info("There is no expiration date stored yet...");
 				Calendar now = Calendar.getInstance();
 				now.add(Calendar.SECOND, _rateOfDecay);
-				droppedPdc.set(_customDataKeys.expirationDate, PersistentDataType.STRING, _timeFormat.format(now.getTime()));
+				droppedPdc.set(_customDataKeys.expirationDate, PersistentDataType.STRING, _internalTimeFormat.format(now.getTime()));
+
+				List<String> lore = new ArrayList<>();
+				if(droppedItemMeta.hasLore())
+					lore = droppedItemMeta.getLore();
+				lore.add(ChatColor.DARK_GREEN + "Will decay at:");
+				lore.add(ChatColor.DARK_GREEN + _loreTimeFormat.format(now.getTime()));
+				droppedItemMeta.setLore(lore);
+
 				droppedItemStack.setItemMeta(droppedItemMeta);
 				//logger.info("Expiration date of " + _config.getInt("RateOfDecay") + " seconds stored!");
 			}
