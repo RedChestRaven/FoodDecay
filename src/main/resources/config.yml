@@ -37,4 +37,4 @@ OnPlayerPickupFromOtherInventory: false
 # !!! CAUTION !!!
 # !!! Messing with the values under here might seriously break the plugin !!!
 # !!! Under no circumstance, change these values !!!
-Version: 1
+Version: 0

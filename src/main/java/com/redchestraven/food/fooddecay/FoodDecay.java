@@ -19,7 +19,7 @@ public final class FoodDecay extends JavaPlugin
 	{
 		// Plugin startup logic
 		logger.info("Starting up FoodDecay...");
-		TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
+		//TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
 
 		// Create config if it doesn't exist already, since other parts require it
 		logger.info("Checking if config already exists...");
