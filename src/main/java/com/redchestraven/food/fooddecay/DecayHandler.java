@@ -37,6 +37,7 @@ public final class DecayHandler implements Listener
 	private static ContainerChecker _containerChecker;
 	private static StorageEntityChecker _storageEntityChecker;
 	private static int _decayCheckerTaskId = -1;
+	private static List<String> _activeWorlds = new ArrayList<>();
 
 	private static final HashSet<Material> _decayingFoods = new HashSet<>();
 	private static final HashSet<Material> _decayStoppers = new HashSet<>();
@@ -77,47 +78,50 @@ public final class DecayHandler implements Listener
 						}
 						//logger.info("Players have been checked, and food has been decayed. Moving on to containers...");
 
-						Chunk[] loadedChunks = Bukkit.getWorld("testing").getLoadedChunks();
-						int totalEntitiesLoaded = 0;
-						for(Chunk chunk: loadedChunks)
+						for(String worldName: _activeWorlds)
 						{
-							if(chunk.isEntitiesLoaded())
+							Chunk[] loadedChunks = Bukkit.getWorld(worldName).getLoadedChunks();
+							//int totalEntitiesLoaded = 0;
+							for (Chunk chunk : loadedChunks)
 							{
-								// Looking for blocks with inventories. Not all of these are entities, like the furnace, so I
-								// need to use this method for those.
-								List<BlockState> containers = Arrays.stream(chunk.getTileEntities()).filter(_containerChecker).collect(Collectors.toList());
-								totalEntitiesLoaded += containers.size();
-								if(containers.size() > 0)
+								if (chunk.isEntitiesLoaded())
 								{
-									//logger.info("There are " + containers.size() + " containers to check.");
-
-									for (BlockState container : containers)
+									// Looking for blocks with inventories. Not all of these are entities, like the furnace, so I
+									// need to use this method for those.
+									List<BlockState> containers = Arrays.stream(chunk.getTileEntities()).filter(_containerChecker).collect(Collectors.toList());
+									//totalEntitiesLoaded += containers.size();
+									if (containers.size() > 0)
 									{
-										//logger.info("Looking at a " + container.getType());
-										if(container instanceof InventoryHolder)
-											DecayInventory(((InventoryHolder) container).getInventory());
-										else
-											logger.warning("Can't check inventory of Blockstate: " + container.getType());
+										//logger.info("There are " + containers.size() + " containers to check.");
+
+										for (BlockState container : containers)
+										{
+											//logger.info("Looking at a " + container.getType());
+											if (container instanceof InventoryHolder)
+												DecayInventory(((InventoryHolder) container).getInventory());
+											else
+												logger.warning("Can't check inventory of Blockstate: " + container.getType());
+										}
 									}
-								}
 
-								// Vehicles, however, are Entities and can be InventoryHolders, but won't have a BlockState,
-								// so I'm getting them this way.
-								Object[] entities = Arrays.stream(chunk.getEntities()).filter(_storageEntityChecker).toArray();
-								totalEntitiesLoaded += entities.length;
-								if(entities.length > 0)
-								{
-									//logger.info("There are " + entities.length + " unchecked entities to check.");
-
-									for(Object entity: entities)
+									// Vehicles, however, are Entities and can be InventoryHolders, but won't have a BlockState,
+									// so I'm getting them this way.
+									Object[] entities = Arrays.stream(chunk.getEntities()).filter(_storageEntityChecker).toArray();
+									//totalEntitiesLoaded += entities.length;
+									if (entities.length > 0)
 									{
-										if(entity instanceof InventoryHolder)
-											DecayInventory(((InventoryHolder) entity).getInventory());
+										//logger.info("There are " + entities.length + " unchecked entities to check.");
+
+										for (Object entity : entities)
+										{
+											if (entity instanceof InventoryHolder)
+												DecayInventory(((InventoryHolder) entity).getInventory());
+										}
 									}
 								}
 							}
+							//logger.info("A total of " + totalEntitiesLoaded + " containers have been checked in " + loadedChunks.length + " loaded chunks, and food has been decayed.");
 						}
-						//logger.info("A total of " + totalEntitiesLoaded + " containers have been checked in " + loadedChunks.length + " loaded chunks, and food has been decayed.");
 					}
 				},
 				(_decayCheckInterval * 20L), // In server ticks. 1 second = 20 server ticks
@@ -151,6 +155,9 @@ public final class DecayHandler implements Listener
 
 		_rateOfDecay = config.getInt("RateOfDecay");
 		_decayCheckInterval = config.getInt("DecayCheckInterval");
+
+		_activeWorlds = config.getStringList("Worlds");
+
 		if(_decayCheckerTaskId != -1) Bukkit.getScheduler().cancelTask(_decayCheckerTaskId);
 		StartRepeatingDecayCheck(_plugin);
 	}

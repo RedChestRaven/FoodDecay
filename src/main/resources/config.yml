@@ -19,6 +19,10 @@ DecayStoppers:
 RateOfDecay: 120 #in seconds
 DecayCheckInterval: 10 #in seconds
 
+Worlds:
+  - 'Testing'
+  #- 'World'
+
 # !!! CAUTION !!!
 # !!! Below are advanced settings, and are only meant to be changed if you understand the repercussions !!!
 
