@@ -2,16 +2,20 @@ package com.redchestraven.food.fooddecay.commands;
 
 import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.EventNames;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.List;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 public class VerifyCommand implements CommandExecutor
 {
@@ -151,6 +155,20 @@ public class VerifyCommand implements CommandExecutor
 			logger.severe("The rate of decay is text, instead of a number. Disabling FoodDecay...");
 			return false;
 		}
+
+		/*========================*
+		 | Verifying worlds exist |
+		 *========================*/
+		 List<String> _worldNamesFromConfig = _config.getStringList("Worlds");
+		 List<String> _existingWorldNames = Bukkit.getWorlds().stream().map(WorldInfo::getName).collect(Collectors.toList());
+		 for(String worldNameFromConfig: _worldNamesFromConfig)
+		 {
+			if(!_existingWorldNames.contains(worldNameFromConfig))
+			{
+				logger.severe("This world does not exist on your server! Disabling FoodDecay...");
+				return false;
+			}
+		 }
 
 		/*============================================*
 		 | Verifying if at least one event is enabled |
