@@ -37,6 +37,8 @@ OnPickupByPlayer: false
 OnPickupByHopper: false
 OnNonPlayerMoveToOtherInventory: false
 OnPlayerPickupFromOtherInventory: false
+OnTradeForFood: true
+OnCraftingFood: true
 
 # !!! CAUTION !!!
 # !!! Messing with the values under here might seriously break the plugin !!!

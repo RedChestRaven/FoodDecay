@@ -6,6 +6,8 @@ public class EventNames{
 	public static final String onPickupByHopper = "OnPickupByHopper";
 	public static final String onNonPlayerMoveToOtherInventory = "OnNonPlayerMoveToOtherInventory";
 	public static final String onPlayerPickupFromOtherInventory = "OnPlayerPickupFromOtherInventory";
+	public static final String onTradeForFood = "OnTradeForFood";
+	public static final String onCraftingFood = "OnCraftingFood";
 
 	// GenerateFoodAsLoot events
 	public static final String onDropFromBlockBreak = "OnDropFromBlockBreak";
