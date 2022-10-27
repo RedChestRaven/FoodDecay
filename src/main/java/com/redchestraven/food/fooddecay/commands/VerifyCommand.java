@@ -4,7 +4,6 @@ import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.EventNames;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -180,7 +179,9 @@ public class VerifyCommand implements CommandExecutor
 				|| _config.getBoolean(EventNames.onPickupByPlayer)
 				|| _config.getBoolean(EventNames.onPickupByHopper)
 				|| _config.getBoolean(EventNames.onNonPlayerMoveToOtherInventory)
-				|| _config.getBoolean(EventNames.onPlayerPickupFromOtherInventory);
+				|| _config.getBoolean(EventNames.onPlayerPickupFromOtherInventory)
+				|| _config.getBoolean(EventNames.onTradeForFood)
+				|| _config.getBoolean(EventNames.onCraftingFood);
 
 		if(!atLeastOneEventEnabled)
 		{
