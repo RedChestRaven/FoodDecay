@@ -60,6 +60,7 @@ public final class FoodDecay extends JavaPlugin
 		Bukkit.getPluginManager().registerEvents(DecayHandler.GetInstance(this), this);
 		Bukkit.getPluginManager().registerEvents(ObtainFoodListener.GetInstance(this), this);
 		Bukkit.getPluginManager().registerEvents(GenerateFoodAsLootListener.GetInstance(this), this);
+		Bukkit.getPluginManager().registerEvents(TradeForFoodListener.GetInstance(this), this);
 		logger.info("Events registered!");
 
 		if(_enabled)

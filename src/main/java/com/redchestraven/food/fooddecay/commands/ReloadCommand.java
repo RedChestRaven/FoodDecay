@@ -37,6 +37,7 @@ public class ReloadCommand implements CommandExecutor
 			DecayHandler.UpdateConfig(config);
 			GenerateFoodAsLootListener.UpdateConfig(config);
 			ObtainFoodListener.UpdateConfig(config);
+			TradeForFoodListener.UpdateConfig(config);
 			logger.info("Changes applied, FoodDecay is fully ready to go!");
 		}
 		else
