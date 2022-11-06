@@ -26,6 +26,7 @@ public final class ObtainFoodListener implements Listener
 	private static final Map<String, Boolean> _enabledEvents = new HashMap<>();
 	private static final List<InventoryAction> _pickupActions = List.of(InventoryAction.HOTBAR_SWAP, InventoryAction.PICKUP_ALL,
 			InventoryAction.PICKUP_HALF, InventoryAction.SWAP_WITH_CURSOR, InventoryAction.MOVE_TO_OTHER_INVENTORY);
+	private static final CustomDataKeys cdk = new CustomDataKeys();
 
 	private ObtainFoodListener(JavaPlugin plugin)
 	{
@@ -53,7 +54,6 @@ public final class ObtainFoodListener implements Listener
 		_enabledEvents.put(EventNames.onPickupByHopper, config.getBoolean(EventNames.onPickupByHopper));
 		_enabledEvents.put(EventNames.onNonPlayerMoveToOtherInventory, config.getBoolean(EventNames.onNonPlayerMoveToOtherInventory));
 		_enabledEvents.put(EventNames.onPlayerPickupFromOtherInventory, config.getBoolean(EventNames.onPlayerPickupFromOtherInventory));
-		_enabledEvents.put(EventNames.onTradeForFood, config.getBoolean(EventNames.onTradeForFood));
 		_enabledEvents.put(EventNames.onCraftingFood, config.getBoolean(EventNames.onCraftingFood));
 
 		//logger.info("Events after reload: " + _enabledEvents.get(EventNames.onPickupByPlayer)
@@ -110,28 +110,12 @@ public final class ObtainFoodListener implements Listener
 	}
 
 	@EventHandler
-	public void OnTradeForFood(InventoryClickEvent ice)
-	{
-		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onTradeForFood))
-		{
-			Inventory tradeInventory = ice.getClickedInventory();
-			if(tradeInventory != null && tradeInventory.getType() == InventoryType.MERCHANT
-					&& ice.getSlotType() == InventoryType.SlotType.RESULT
-					&& (_pickupActions.contains(ice.getAction()) || ice.getClick() == ClickType.DROP))
-			{
-				logger.info("Click used: " + ice.getAction());
-
-				_decayHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
-			}
-		}
-	}
-
-	@EventHandler
 	public void OnCraftingFood(CraftItemEvent cie)
 	{
 		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onCraftingFood))
 		{
 			logger.info("Craft triggered!");
+			logger.info("Click used: " + cie.getAction());
 
 			// Case of shift click, trying to make all possible from the crafting grid, and put them in the inventory
 			// myself, while cancelling the actual craft event
@@ -140,7 +124,6 @@ public final class ObtainFoodListener implements Listener
 				logger.info("Multi craft, so special handling...");
 				ItemStack result = cie.getRecipe().getResult();
 				int resultSize = result.getAmount();
-				CustomDataKeys cdk = new CustomDataKeys();
 
 				_decayHandler.AddDecayTimeIfDecayingFood(result);
 				if(result.getItemMeta().getPersistentDataContainer().has(cdk.expirationDate, PersistentDataType.STRING))
@@ -159,7 +142,9 @@ public final class ObtainFoodListener implements Listener
 					// Preparing the crafted food in stacks, to offer it in the right stack size to prevent them being too big
 					// Ex.: crafting 7 mushroom stew should take 7 empty slots, not 1 slot as a stack of 7
 					int resultMaxStackSize = result.getMaxStackSize();
-					int amountOfStacksCrafted = (int) Math.ceil(1f * (maxTimesCraftable * resultSize) / resultMaxStackSize);
+					final int resultTotalCrafted = maxTimesCraftable * resultSize;
+					int amountOfStacksCrafted = (int) Math.floor(1f * resultTotalCrafted / resultMaxStackSize)
+													+ (resultTotalCrafted % resultMaxStackSize) > 0 ? 1 : 0 ;
 					ItemStack[] results = new ItemStack[amountOfStacksCrafted];
 					result.setAmount(result.getMaxStackSize());
 					for(int i = 0; i < amountOfStacksCrafted - 1; i++)
@@ -168,9 +153,9 @@ public final class ObtainFoodListener implements Listener
 						results[i] = new ItemStack(result);
 					}
 					// This is to accommodate for the possibility of a non-full stack being left over
-					if((maxTimesCraftable * resultSize) % resultMaxStackSize > 0)
+					if(resultTotalCrafted % resultMaxStackSize > 0)
 					{
-						result.setAmount((maxTimesCraftable * resultSize) - ((amountOfStacksCrafted - 1) * resultMaxStackSize));
+						result.setAmount(resultTotalCrafted - ((amountOfStacksCrafted - 1) * resultMaxStackSize));
 						logger.warning("Non-full stack! Size is " + result.getAmount());
 					}
 					else
@@ -231,7 +216,7 @@ public final class ObtainFoodListener implements Listener
 							logger.info("Finishing up with removing the excess items...");
 							Inventory playerInv = cie.getWhoClicked().getInventory();
 							HashMap<Integer, ItemStack> craftedFoodsMap = (HashMap<Integer, ItemStack>) playerInv.all(result.getType());
-							ItemStack[] craftedFoods = (ItemStack[]) craftedFoodsMap.values().toArray();
+							ItemStack[] craftedFoods = craftedFoodsMap.values().toArray(new ItemStack[0]);
 							int keyToEdit = -1;
 
 							for (int i = 0; i < craftedFoods.length; i++)
@@ -253,7 +238,7 @@ public final class ObtainFoodListener implements Listener
 							{
 								logger.info("Actually removing the excess items...");
 								ItemStack food = craftedFoodsMap.get(keyToEdit);
-								food.setAmount(food.getAmount() - (resultSize - remainingAmount));
+								food.setAmount(food.getAmount() - (resultSize - (remainingAmount % resultSize)));
 								playerInv.setItem(keyToEdit, food);
 							} else
 							{
