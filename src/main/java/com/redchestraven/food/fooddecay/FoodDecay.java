@@ -1,12 +1,12 @@
 package com.redchestraven.food.fooddecay;
 
 import com.redchestraven.food.fooddecay.commands.*;
+import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
 import com.redchestraven.food.fooddecay.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.Set;
-import java.util.TimeZone;
 import java.util.logging.Logger;
 
 public final class FoodDecay extends JavaPlugin
@@ -26,7 +26,9 @@ public final class FoodDecay extends JavaPlugin
 		if(getDataFolder().exists() && (Set.of(getDataFolder().list()).contains("config.yml")))
 		{
 			logger.info("Config found, verifying...");
-			if(getConfig().getString("Version").equals(getDescription().getVersion().substring(0,1)))
+			String configVersion = getConfig().getString(ConfigSettingNames.version);
+			String pluginVersion = getDescription().getVersion().split("\\.")[0];
+			if(configVersion.equals(pluginVersion))
 			{
 				SetEnabled(new VerifyCommand(this).VerifyConfig());
 				if (_enabled)
@@ -37,10 +39,11 @@ public final class FoodDecay extends JavaPlugin
 			else
 			{
 				SetEnabled(false);
-				logger.warning("Config is outdated. Your config's version is " + getConfig().getString("Version")
-						+ " and should be " + getDescription().getVersion().charAt(0) + ". FoodDecay will be disabled.");
-				logger.warning("Please stop the server, back up your config, delete the original, apply your changes "
-						+ "as applicable, and start the server again.");
+				logger.severe("Config is outdated. Your config's version is " + configVersion
+						+ " and should be " + pluginVersion + ". FoodDecay will be disabled.");
+				logger.severe("Please stop the server, back up your config, delete the original, "
+						+ "apply your changes as applicable, and start the server again.");
+				return;
 			}
 		}
 		else

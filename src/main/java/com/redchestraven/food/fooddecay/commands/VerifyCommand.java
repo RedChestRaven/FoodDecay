@@ -1,6 +1,7 @@
 package com.redchestraven.food.fooddecay.commands;
 
 import com.redchestraven.food.fooddecay.FoodDecay;
+import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
 import com.redchestraven.food.fooddecay.consts.EventNames;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
@@ -50,7 +51,7 @@ public class VerifyCommand implements CommandExecutor
 		/*=====================*
 		 | Verifying food list |
 		 *=====================*/
-		List<String> _perishableFoods = _config.getStringList("DecayingFoods");
+		List<String> _perishableFoods = _config.getStringList(ConfigSettingNames.decayingFoods);
 		if(_perishableFoods.isEmpty())
 		{
 			logger.severe("The perishable foods list is empty, missing or isn't correctly written. Disabling FoodDecay...");
@@ -84,7 +85,7 @@ public class VerifyCommand implements CommandExecutor
 		/*====================*
 		 | Verifying ice list |
 		 *====================*/
-		List<String> _decayStoppers = _config.getStringList("DecayStoppers");
+		List<String> _decayStoppers = _config.getStringList(ConfigSettingNames.decayStoppers);
 		if(_decayStoppers.isEmpty())
 		{
 			logger.severe("The decay stoppers list is empty, missing or isn't correctly written. Disabling FoodDecay...");
@@ -117,7 +118,7 @@ public class VerifyCommand implements CommandExecutor
 		/*=================================*
 		 | Verifying time-related settings |
 		 *=================================*/
-		String _decayIntervalString = _config.getString("DecayCheckInterval");
+		String _decayIntervalString = _config.getString(ConfigSettingNames.decayCheckInterval);
 		try
 		{
 			if(_decayIntervalString != null)
@@ -136,7 +137,7 @@ public class VerifyCommand implements CommandExecutor
 			return false;
 		}
 
-		String _rateOfDecayString = _config.getString("DecayCheckInterval");
+		String _rateOfDecayString = _config.getString(ConfigSettingNames.rateOfDecay);
 		try
 		{
 			if (_rateOfDecayString != null)
@@ -158,7 +159,7 @@ public class VerifyCommand implements CommandExecutor
 		/*========================*
 		 | Verifying worlds exist |
 		 *========================*/
-		 List<String> _worldNamesFromConfig = _config.getStringList("Worlds");
+		 List<String> _worldNamesFromConfig = _config.getStringList(ConfigSettingNames.worlds);
 		 List<String> _existingWorldNames = Bukkit.getWorlds().stream().map(WorldInfo::getName).collect(Collectors.toList());
 		 for(String worldNameFromConfig: _worldNamesFromConfig)
 		 {
