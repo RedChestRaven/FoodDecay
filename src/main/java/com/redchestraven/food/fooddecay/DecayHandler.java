@@ -1,5 +1,6 @@
 package com.redchestraven.food.fooddecay;
 
+import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
 import com.redchestraven.food.fooddecay.consts.CustomDataKeys;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -140,23 +141,23 @@ public final class DecayHandler implements Listener
 	public static void UpdateConfig(FileConfiguration config)
 	{
 		_decayingFoods.clear();
-		for(String decayingFoodName: config.getStringList("DecayingFoods"))
+		for(String decayingFoodName: config.getStringList(ConfigSettingNames.decayingFoods))
 		{
 			// Making sure Material is always correctly formatted, while allowing for spaces being used to make the config more readable
 			_decayingFoods.add(Material.getMaterial(decayingFoodName.toUpperCase().replace(' ', '_')));
 		}
 
 		_decayStoppers.clear();
-		for(String decayStopperName: config.getStringList("DecayStoppers"))
+		for(String decayStopperName: config.getStringList(ConfigSettingNames.decayStoppers))
 		{
 			// Making sure Material is always correctly formatted, while allowing for spaces being used to make the config more readable
 			_decayStoppers.add(Material.getMaterial(decayStopperName.toUpperCase().replace(' ', '_')));
 		}
 
-		_rateOfDecay = config.getInt("RateOfDecay");
-		_decayCheckInterval = config.getInt("DecayCheckInterval");
+		_rateOfDecay = config.getInt(ConfigSettingNames.rateOfDecay);
+		_decayCheckInterval = config.getInt(ConfigSettingNames.decayCheckInterval);
 
-		_activeWorlds = config.getStringList("Worlds");
+		_activeWorlds = config.getStringList(ConfigSettingNames.worlds);
 
 		if(_decayCheckerTaskId != -1) Bukkit.getScheduler().cancelTask(_decayCheckerTaskId);
 		StartRepeatingDecayCheck(_plugin);
@@ -243,7 +244,7 @@ public final class DecayHandler implements Listener
 				droppedItemMeta.setLore(lore);
 
 				droppedItemStack.setItemMeta(droppedItemMeta);
-				//logger.info("Expiration date of " + _config.getInt("RateOfDecay") + " seconds stored!");
+				//logger.info("Expiration date of " + _config.getInt(ConfigSettingNames.rateOfDecay) + " seconds stored!");
 			}
 		}
 	}
