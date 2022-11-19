@@ -1,6 +1,6 @@
 package com.redchestraven.food.fooddecay.consts;
 
-public class EventNames
+public final class EventNames
 {
 	// ObtainFood events
 	public static final String onPickupByPlayer = "OnPickupByPlayer";

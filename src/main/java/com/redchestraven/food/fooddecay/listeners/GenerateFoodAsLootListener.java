@@ -18,7 +18,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class GenerateFoodAsLootListener implements Listener
+public final class GenerateFoodAsLootListener implements Listener
 {
 	private static final Logger logger = Logger.getLogger("FoodDecay");
 	private static GenerateFoodAsLootListener _generateFoodAsLootListener = null;

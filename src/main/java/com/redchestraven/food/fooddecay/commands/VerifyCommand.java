@@ -8,16 +8,18 @@ import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public class VerifyCommand implements CommandExecutor
+public final class VerifyCommand implements CommandExecutor
 {
 	private final Logger logger;
 	private FileConfiguration _config;
@@ -48,43 +50,69 @@ public class VerifyCommand implements CommandExecutor
 	{
 		_config = _plugin.getConfig();
 
-		/*=====================*
-		 | Verifying food list |
-		 *=====================*/
-		List<String> _perishableFoods = _config.getStringList(ConfigSettingNames.decayingFoods);
-		if(_perishableFoods.isEmpty())
+		/*===============================*
+		 | Verifying decaying foods list |
+		 *===============================*/
+		logger.info("Verifying decaying foods...");
+		ConfigurationSection _decayingFoodGroups = _config.getConfigurationSection(ConfigSettingNames.decayingFoods);
+
+		if(_decayingFoodGroups == null || _decayingFoodGroups.getKeys(false).isEmpty())
 		{
-			logger.severe("The perishable foods list is empty, missing or isn't correctly written. Disabling FoodDecay...");
+			logger.severe("The food groups list is empty, missing or isn't correctly written. Disabling FoodDecay...");
 			return false;
 		}
 		else
 		{
-			for(String _perishableName: _perishableFoods)
+			//Check if all decaying food is present in exactly one (1) group
+			HashSet<String> _decayingFoodNames = new HashSet<>();
+			for(String _decayingFoodGroup: _decayingFoodGroups.getKeys(false))
 			{
-				//logger.info("Checking food " + _perishableName);
-				Material perishable = Material.getMaterial(_perishableName.toUpperCase().replace(' ', '_'));
-				if(perishable == null)
+				//logger.info("Checking food group " + _decayingFoodGroup);
+				List<String> _decayingFoods = _decayingFoodGroups.getStringList(_decayingFoodGroup);
+				if(_decayingFoods == null || _decayingFoods.isEmpty())
 				{
-					logger.severe("The food " + _perishableName + " isn't a Material. Disabling FoodDecay...");
+					logger.severe("The food group list " + _decayingFoodGroup
+							+ " is empty, missing or isn't correctly written. Disabling FoodDecay...");
 					return false;
 				}
-				else if(!perishable.isItem())
+				else
 				{
-					logger.severe("The food " + _perishableName + " isn't an Item. Disabling FoodDecay...");
-					return false;
+					for(String _decayingFoodName: _decayingFoods)
+					{
+						//logger.info("Checking food " + _decayingFoodName);
+						if(!_decayingFoodNames.add(_decayingFoodName))
+						{
+							logger.severe("The food " + _decayingFoodName
+									+ " is already present in a different group. Disabling FoodDecay...");
+							return false;
+						}
+
+						Material perishable = Material.getMaterial(_decayingFoodName.toUpperCase().replace(' ', '_'));
+						if(perishable == null)
+						{
+							logger.severe("The food " + _decayingFoodName + " isn't a Material. Disabling FoodDecay...");
+							return false;
+						}
+						else if(!perishable.isItem())
+						{
+							logger.severe("The food " + _decayingFoodName + " isn't an Item. Disabling FoodDecay...");
+							return false;
+						}
+						/* Disabling check for just edible foods, as there is stuff like wheat we might want to decay too...
+						else if(!perishable.isEdible())
+						{
+							logger.severe("The food " + _decayingFoodName + " isn't edible. Disabling FoodDecay...");
+							return false;
+						}*/
+					}
 				}
-				/* Disabling check for just edible foods, as there is stuff like wheat we might want to decay too...
-				else if(!perishable.isEdible())
-				{
-					logger.severe("The food " + _perishableName + " isn't edible. Disabling FoodDecay...");
-					return false;
-				}*/
 			}
 		}
 
-		/*====================*
-		 | Verifying ice list |
-		 *====================*/
+		/*===============================*
+		 | Verifying decay stoppers list |
+		 *===============================*/
+		logger.info("Decaying foods verified, verifying decay stoppers...");
 		List<String> _decayStoppers = _config.getStringList(ConfigSettingNames.decayStoppers);
 		if(_decayStoppers.isEmpty())
 		{
@@ -118,6 +146,7 @@ public class VerifyCommand implements CommandExecutor
 		/*=================================*
 		 | Verifying time-related settings |
 		 *=================================*/
+		logger.info("Decay stoppers verified, verifying time-related settings...");
 		String _decayIntervalString = _config.getString(ConfigSettingNames.decayCheckInterval);
 		try
 		{
@@ -159,20 +188,22 @@ public class VerifyCommand implements CommandExecutor
 		/*========================*
 		 | Verifying worlds exist |
 		 *========================*/
-		 List<String> _worldNamesFromConfig = _config.getStringList(ConfigSettingNames.worlds);
-		 List<String> _existingWorldNames = Bukkit.getWorlds().stream().map(WorldInfo::getName).collect(Collectors.toList());
-		 for(String worldNameFromConfig: _worldNamesFromConfig)
-		 {
+		logger.info("Time-related settings verified, verifying worlds...");
+		List<String> _worldNamesFromConfig = _config.getStringList(ConfigSettingNames.worlds);
+		List<String> _existingWorldNames = Bukkit.getWorlds().stream().map(WorldInfo::getName).collect(Collectors.toList());
+		for(String worldNameFromConfig: _worldNamesFromConfig)
+		{
 			if(!_existingWorldNames.contains(worldNameFromConfig))
 			{
 				logger.severe("This world does not exist on your server! Disabling FoodDecay...");
 				return false;
 			}
-		 }
+		}
 
 		/*============================================*
 		 | Verifying if at least one event is enabled |
 		 *============================================*/
+		logger.info("Worlds verified, verifying enabled events...");
 		boolean atLeastOneEventEnabled = _config.getBoolean(EventNames.onDropFromBlockBreak)
 				|| _config.getBoolean(EventNames.onContainerLootGenerated)
 				|| _config.getBoolean(EventNames.onDropFromEntityDeath)

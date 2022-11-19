@@ -2,11 +2,13 @@ package com.redchestraven.food.fooddecay;
 
 import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
 import com.redchestraven.food.fooddecay.consts.CustomDataKeys;
+import com.redchestraven.food.fooddecay.customtypes.DecayingFoodGroup;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -40,7 +42,7 @@ public final class DecayHandler implements Listener
 	private static int _decayCheckerTaskId = -1;
 	private static List<String> _activeWorlds = new ArrayList<>();
 
-	private static final HashSet<Material> _decayingFoods = new HashSet<>();
+	private static final HashSet<DecayingFoodGroup> _decayingFoodGroups = new HashSet<>();
 	private static final HashSet<Material> _decayStoppers = new HashSet<>();
 	private static ItemStack _rottenFood;
 	private static int _rateOfDecay;
@@ -140,11 +142,17 @@ public final class DecayHandler implements Listener
 
 	public static void UpdateConfig(FileConfiguration config)
 	{
-		_decayingFoods.clear();
-		for(String decayingFoodName: config.getStringList(ConfigSettingNames.decayingFoods))
+		_decayingFoodGroups.clear();
+		ConfigurationSection decayingFoodGroups = config.getConfigurationSection(ConfigSettingNames.decayingFoods);
+		for(String decayingFoodGroupName: decayingFoodGroups.getKeys(false))
 		{
-			// Making sure Material is always correctly formatted, while allowing for spaces being used to make the config more readable
-			_decayingFoods.add(Material.getMaterial(decayingFoodName.toUpperCase().replace(' ', '_')));
+			ArrayList<Material> decayingFoods = new ArrayList<>();
+			for (String decayingFoodName : decayingFoodGroups.getStringList(decayingFoodGroupName))
+			{
+				// Making sure Material is always correctly formatted, while allowing for spaces being used to make the config more readable
+				decayingFoods.add(Material.getMaterial(decayingFoodName.toUpperCase().replace(' ', '_')));
+			}
+			_decayingFoodGroups.add(new DecayingFoodGroup(decayingFoodGroupName, decayingFoods));
 		}
 
 		_decayStoppers.clear();
@@ -174,26 +182,29 @@ public final class DecayHandler implements Listener
 			}
 		}
 
-		for (Material _perishable : _decayingFoods)
+		for(DecayingFoodGroup decayingFoodGroup: _decayingFoodGroups)
 		{
-			if (_perishable != null && inventory.contains(_perishable))
+			for (Material _decayingFood: decayingFoodGroup.GetDecayingFoods())
 			{
-				//logger.info(String.format("Container has %s in their inventory!", _perishableName));
-				HashMap<Integer, ? extends ItemStack> similarItemStacks = inventory.all(_perishable);
-
-				// Using the keyset instead of the values, since I need to replace the item at its slotindex
-				for (int invItemStackKey : similarItemStacks.keySet())
+				if (_decayingFood != null && inventory.contains(_decayingFood))
 				{
-					ItemStack invItemStack = similarItemStacks.get(invItemStackKey);
-					PersistentDataContainer invPdc = invItemStack.getItemMeta().getPersistentDataContainer();
+					//logger.info(String.format("Container has %s in their inventory!", _perishableName));
+					HashMap<Integer, ? extends ItemStack> similarItemStacks = inventory.all(_decayingFood);
 
-					if (invPdc.has(_customDataKeys.expirationDate, PersistentDataType.STRING)
-							&& CheckIfTimestampExpired(invPdc.get(_customDataKeys.expirationDate, PersistentDataType.STRING)))
+					// Using the keyset instead of the values, since I need to replace the item at its slotindex
+					for (int invItemStackKey : similarItemStacks.keySet())
 					{
-						//logger.info("Rotting food found, converting...");
-						_rottenFood.setAmount(invItemStack.getAmount());
-						inventory.setItem(invItemStackKey, _rottenFood);
-						//logger.info("Food is now rotten!");
+						ItemStack invItemStack = similarItemStacks.get(invItemStackKey);
+						PersistentDataContainer invPdc = invItemStack.getItemMeta().getPersistentDataContainer();
+
+						if (invPdc.has(_customDataKeys.expirationDate, PersistentDataType.STRING)
+								&& CheckIfTimestampExpired(invPdc.get(_customDataKeys.expirationDate, PersistentDataType.STRING)))
+						{
+							//logger.info("Rotting food found, converting...");
+							_rottenFood.setAmount(invItemStack.getAmount());
+							inventory.setItem(invItemStackKey, _rottenFood);
+							//logger.info("Food is now rotten!");
+						}
 					}
 				}
 			}
@@ -222,29 +233,32 @@ public final class DecayHandler implements Listener
 		return calendar.getTime().before(nowDate);
 	}
 
-	public void AddDecayTimeIfDecayingFood(ItemStack droppedItemStack)
+	public void AddDecayTimeIfDecayingFood(ItemStack itemStackToCheck)
 	{
-		if (_decayingFoods.contains(droppedItemStack.getType()))
+		for(DecayingFoodGroup decayingFoodGroup: _decayingFoodGroups)
 		{
-			ItemMeta droppedItemMeta = droppedItemStack.getItemMeta();
-			PersistentDataContainer droppedPdc = droppedItemMeta.getPersistentDataContainer();
-			//logger.info("Got pdc of dropped item: " + droppedPdc.hashCode() + ". It has " + droppedPdc.getKeys().size() + " keys.");
-			if (!droppedPdc.has(_customDataKeys.expirationDate, PersistentDataType.STRING))
+			if (decayingFoodGroup.GetDecayingFoods().contains(itemStackToCheck.getType()))
 			{
-				//logger.info("There is no expiration date stored yet...");
-				Calendar now = Calendar.getInstance();
-				now.add(Calendar.SECOND, _rateOfDecay);
-				droppedPdc.set(_customDataKeys.expirationDate, PersistentDataType.STRING, _internalTimeFormat.format(now.getTime()));
+				ItemMeta itemMetaToCheck = itemStackToCheck.getItemMeta();
+				PersistentDataContainer pdcToCheck = itemMetaToCheck.getPersistentDataContainer();
+				//logger.info("Got pdc of dropped item: " + droppedPdc.hashCode() + ". It has " + droppedPdc.getKeys().size() + " keys.");
+				if (!pdcToCheck.has(_customDataKeys.expirationDate, PersistentDataType.STRING))
+				{
+					//logger.info("There is no expiration date stored yet...");
+					Calendar now = Calendar.getInstance();
+					now.add(Calendar.SECOND, _rateOfDecay);
+					pdcToCheck.set(_customDataKeys.expirationDate, PersistentDataType.STRING, _internalTimeFormat.format(now.getTime()));
 
-				List<String> lore = new ArrayList<>();
-				if(droppedItemMeta.hasLore())
-					lore = droppedItemMeta.getLore();
-				lore.add(ChatColor.DARK_GREEN + "Will decay at:");
-				lore.add(ChatColor.DARK_GREEN + _loreTimeFormat.format(now.getTime()));
-				droppedItemMeta.setLore(lore);
+					List<String> lore = new ArrayList<>();
+					if (itemMetaToCheck.hasLore())
+						lore = itemMetaToCheck.getLore();
+					lore.add(ChatColor.DARK_GREEN + "Will decay at:");
+					lore.add(ChatColor.DARK_GREEN + _loreTimeFormat.format(now.getTime()));
+					itemMetaToCheck.setLore(lore);
 
-				droppedItemStack.setItemMeta(droppedItemMeta);
-				//logger.info("Expiration date of " + _config.getInt(ConfigSettingNames.rateOfDecay) + " seconds stored!");
+					itemStackToCheck.setItemMeta(itemMetaToCheck);
+					//logger.info("Expiration date of " + _config.getInt(ConfigSettingNames.rateOfDecay) + " seconds stored!");
+				}
 			}
 		}
 	}
