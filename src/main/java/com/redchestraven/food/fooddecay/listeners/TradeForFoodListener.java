@@ -22,7 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.Logger;
 
-public class TradeForFoodListener implements Listener
+public final class TradeForFoodListener implements Listener
 {
 	private static final Logger logger = Logger.getLogger("FoodDecay");
 	private static TradeForFoodListener _tradeForFoodListener = null;

@@ -4,7 +4,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.NamespacedKey;
 import org.bukkit.plugin.Plugin;
 
-public class CustomDataKeys
+public final class CustomDataKeys
 {
 	public CustomDataKeys(){ }
 

@@ -12,7 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 import java.util.logging.Logger;
 
-public class ReloadCommand implements CommandExecutor
+public final class ReloadCommand implements CommandExecutor
 {
 	private final Logger logger;
 	private final JavaPlugin _plugin;

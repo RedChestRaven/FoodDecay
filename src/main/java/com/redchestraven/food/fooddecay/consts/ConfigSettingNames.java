@@ -1,6 +1,6 @@
 package com.redchestraven.food.fooddecay.consts;
 
-public class ConfigSettingNames
+public final class ConfigSettingNames
 {
 	/*================*
 	 | Basic settings |

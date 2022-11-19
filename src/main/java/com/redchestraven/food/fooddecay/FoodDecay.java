@@ -32,9 +32,9 @@ public final class FoodDecay extends JavaPlugin
 			{
 				SetEnabled(new VerifyCommand(this).VerifyConfig());
 				if (_enabled)
-					logger.info("Config verified, moving on!");
+					logger.info("Config entirely verified, moving on!");
 				else
-					logger.severe("Config isn't correct, please fix, reload and verify again to allow for decaying food.");
+					logger.severe("Config isn't entirely correct, please fix, reload and verify again to allow for decaying food.");
 			}
 			else
 			{
