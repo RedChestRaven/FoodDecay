@@ -25,7 +25,8 @@ public final class ObtainFoodListener implements Listener
 	private static DecayHandler _decayHandler;
 	private static final Map<String, Boolean> _enabledEvents = new HashMap<>();
 	private static final List<InventoryAction> _pickupActions = List.of(InventoryAction.HOTBAR_SWAP, InventoryAction.PICKUP_ALL,
-			InventoryAction.PICKUP_HALF, InventoryAction.SWAP_WITH_CURSOR, InventoryAction.MOVE_TO_OTHER_INVENTORY);
+			InventoryAction.PICKUP_HALF, InventoryAction.SWAP_WITH_CURSOR, InventoryAction.MOVE_TO_OTHER_INVENTORY,
+			InventoryAction.HOTBAR_MOVE_AND_READD, InventoryAction.DROP_ONE_SLOT, InventoryAction.DROP_ALL_SLOT);
 	private static final CustomDataKeys cdk = new CustomDataKeys();
 
 	private ObtainFoodListener(JavaPlugin plugin)
@@ -98,6 +99,7 @@ public final class ObtainFoodListener implements Listener
 	{
 		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onPlayerPickupFromOtherInventory))
 		{
+			logger.info("Pickup action is " + ice.getAction());
 			Inventory topInventory = ice.getClickedInventory();
 			if(topInventory != null && topInventory.getType() != InventoryType.PLAYER
 					&& ice.getSlotType() == InventoryType.SlotType.CONTAINER
