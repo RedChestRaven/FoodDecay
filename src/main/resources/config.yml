@@ -1,19 +1,25 @@
 # The materials you wish to have decayed. Each group name needs to be unique, and each material can be present in only one (1) group.
 # !!! CAUTION !!!
 # !!! Currently can trigger ANY material listed on https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html !!!
-DecayingFoods:
+DecayingFoodGroups:
   Meats:
-    - 'Beef'
-    - 'Chicken'
-    - 'Porkchop'
-    - 'rabbit stew'
+    RateOfDecay: 45 #in seconds
+    DecayingFoods:
+      - 'Beef'
+      - 'Chicken'
+      - 'Porkchop'
+      - 'rabbit stew'
   Fish:
-    - 'Cod'
-    - 'Salmon'
+    RateOfDecay: 30 #in seconds
+    DecayingFoods:
+      - 'Cod'
+      - 'Salmon'
   Plants:
-    - 'Bread'
-    - 'Mushroom stew'
-    - 'wheat'
+    RateOfDecay: 60 #in seconds
+    DecayingFoods:
+      - 'Bread'
+      - 'Mushroom stew'
+      - 'wheat'
 
 # These materials will stop decay while they're in the same inventory as items in DecayingFoods.
 # !!! CAUTION !!!
