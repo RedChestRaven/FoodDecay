@@ -45,7 +45,6 @@ public final class DecayHandler implements Listener
 	private static final HashSet<DecayingFoodGroup> _decayingFoodGroups = new HashSet<>();
 	private static final HashSet<Material> _decayStoppers = new HashSet<>();
 	private static ItemStack _rottenFood;
-	private static int _rateOfDecay;
 	private static int _decayCheckInterval;
 
 	private DecayHandler(JavaPlugin plugin)
@@ -143,16 +142,17 @@ public final class DecayHandler implements Listener
 	public static void UpdateConfig(FileConfiguration config)
 	{
 		_decayingFoodGroups.clear();
-		ConfigurationSection decayingFoodGroups = config.getConfigurationSection(ConfigSettingNames.decayingFoods);
+		ConfigurationSection decayingFoodGroups = config.getConfigurationSection(ConfigSettingNames.decayingFoodGroups);
 		for(String decayingFoodGroupName: decayingFoodGroups.getKeys(false))
 		{
+			int decayingFoodGroupRateOfDecay = decayingFoodGroups.getInt(decayingFoodGroupName + "." + ConfigSettingNames.rateOfDecay);
 			ArrayList<Material> decayingFoods = new ArrayList<>();
-			for (String decayingFoodName : decayingFoodGroups.getStringList(decayingFoodGroupName))
+			for (String decayingFoodName : decayingFoodGroups.getStringList(decayingFoodGroupName + "." + ConfigSettingNames.decayingFoods))
 			{
 				// Making sure Material is always correctly formatted, while allowing for spaces being used to make the config more readable
 				decayingFoods.add(Material.getMaterial(decayingFoodName.toUpperCase().replace(' ', '_')));
 			}
-			_decayingFoodGroups.add(new DecayingFoodGroup(decayingFoodGroupName, decayingFoods));
+			_decayingFoodGroups.add(new DecayingFoodGroup(decayingFoodGroupName, decayingFoodGroupRateOfDecay, decayingFoods));
 		}
 
 		_decayStoppers.clear();
@@ -162,7 +162,6 @@ public final class DecayHandler implements Listener
 			_decayStoppers.add(Material.getMaterial(decayStopperName.toUpperCase().replace(' ', '_')));
 		}
 
-		_rateOfDecay = config.getInt(ConfigSettingNames.rateOfDecay);
 		_decayCheckInterval = config.getInt(ConfigSettingNames.decayCheckInterval);
 
 		_activeWorlds = config.getStringList(ConfigSettingNames.worlds);
@@ -246,7 +245,7 @@ public final class DecayHandler implements Listener
 				{
 					//logger.info("There is no expiration date stored yet...");
 					Calendar now = Calendar.getInstance();
-					now.add(Calendar.SECOND, _rateOfDecay);
+					now.add(Calendar.SECOND, decayingFoodGroup.GetRateOfDecay());
 					pdcToCheck.set(_customDataKeys.expirationDate, PersistentDataType.STRING, _internalTimeFormat.format(now.getTime()));
 
 					List<String> lore = new ArrayList<>();

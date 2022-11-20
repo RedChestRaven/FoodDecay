@@ -53,8 +53,8 @@ public final class VerifyCommand implements CommandExecutor
 		/*===============================*
 		 | Verifying decaying foods list |
 		 *===============================*/
-		logger.info("Verifying decaying foods...");
-		ConfigurationSection _decayingFoodGroups = _config.getConfigurationSection(ConfigSettingNames.decayingFoods);
+		logger.info("Verifying decaying food groups...");
+		ConfigurationSection _decayingFoodGroups = _config.getConfigurationSection(ConfigSettingNames.decayingFoodGroups);
 
 		if(_decayingFoodGroups == null || _decayingFoodGroups.getKeys(false).isEmpty())
 		{
@@ -63,15 +63,38 @@ public final class VerifyCommand implements CommandExecutor
 		}
 		else
 		{
-			//Check if all decaying food is present in exactly one (1) group
+			//Check if each group has a valid rate of decay, and all decaying food is present in exactly one (1) group
 			HashSet<String> _decayingFoodNames = new HashSet<>();
-			for(String _decayingFoodGroup: _decayingFoodGroups.getKeys(false))
+			for(String _decayingFoodGroupName: _decayingFoodGroups.getKeys(false))
 			{
-				//logger.info("Checking food group " + _decayingFoodGroup);
-				List<String> _decayingFoods = _decayingFoodGroups.getStringList(_decayingFoodGroup);
+				//logger.info("Checking food group " + _decayingFoodGroupName);
+
+				//Check if the rate of decay of this group is valid
+				String _rateOfDecayString = _config.getString(_decayingFoodGroupName + "." + ConfigSettingNames.rateOfDecay);
+				try
+				{
+					if (_rateOfDecayString != null)
+					{
+						int _rateOfDecay = Integer.parseInt(_rateOfDecayString);
+						if (_rateOfDecay <= 0)
+						{
+							logger.severe("The rate of decay for food group " + _decayingFoodGroupName
+									+ "has an invalid value. It should be higher than 0, and recommended to be 120 for most servers. Disabling FoodDecay...");
+							return false;
+						}
+					}
+				}
+				catch (NumberFormatException nfe)
+				{
+					logger.severe("The rate of decay is text, instead of a number. Disabling FoodDecay...");
+					return false;
+				}
+
+				//Check for food in this group not already existing in another group
+				List<String> _decayingFoods = _decayingFoodGroups.getStringList(_decayingFoodGroupName + "." + ConfigSettingNames.decayingFoods);
 				if(_decayingFoods == null || _decayingFoods.isEmpty())
 				{
-					logger.severe("The food group list " + _decayingFoodGroup
+					logger.severe("The food group list " + _decayingFoodGroupName
 							+ " is empty, missing or isn't correctly written. Disabling FoodDecay...");
 					return false;
 				}
@@ -163,25 +186,6 @@ public final class VerifyCommand implements CommandExecutor
 		catch (NumberFormatException nfe)
 		{
 			logger.severe("The interval is text, instead of a number. Disabling FoodDecay...");
-			return false;
-		}
-
-		String _rateOfDecayString = _config.getString(ConfigSettingNames.rateOfDecay);
-		try
-		{
-			if (_rateOfDecayString != null)
-			{
-				int _rateOfDecay = Integer.parseInt(_rateOfDecayString);
-				if (_rateOfDecay <= 0)
-				{
-					logger.severe("The rate of decay has an invalid value. It should be higher than 0, and recommended to be 120 for most servers. Disabling FoodDecay...");
-					return false;
-				}
-			}
-		}
-		catch (NumberFormatException nfe)
-		{
-			logger.severe("The rate of decay is text, instead of a number. Disabling FoodDecay...");
 			return false;
 		}
 

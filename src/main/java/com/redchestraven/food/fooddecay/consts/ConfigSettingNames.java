@@ -5,6 +5,7 @@ public final class ConfigSettingNames
 	/*================*
 	 | Basic settings |
 	 *================*/
+	public static final String decayingFoodGroups = "DecayingFoodGroups";
 	public static final String decayingFoods = "DecayingFoods";
 	public static final String decayStoppers = "DecayStoppers";
 	public static final String rateOfDecay = "RateOfDecay";
