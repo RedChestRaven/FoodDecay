@@ -1,5 +1,6 @@
-package com.redchestraven.food.fooddecay;
+package com.redchestraven.food.fooddecay.handlers;
 
+import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
 import com.redchestraven.food.fooddecay.consts.CustomDataKeys;
 import com.redchestraven.food.fooddecay.customtypes.DecayingFoodGroup;
@@ -29,9 +30,9 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public final class DecayHandler implements Listener
+public final class DecayFoodHandler implements Listener
 {
-	private static DecayHandler _decayHandler = null;
+	private static DecayFoodHandler _decayFoodHandler = null;
 	private static JavaPlugin _plugin;
 	private static final CustomDataKeys _customDataKeys = new CustomDataKeys();
 	private static final Logger logger = Logger.getLogger("FoodDecay");
@@ -47,7 +48,7 @@ public final class DecayHandler implements Listener
 	private static ItemStack _rottenFood;
 	private static int _decayCheckInterval;
 
-	private DecayHandler(JavaPlugin plugin)
+	private DecayFoodHandler(JavaPlugin plugin)
 	{
 		_plugin = plugin;
 		_containerChecker = new ContainerChecker();
@@ -131,12 +132,12 @@ public final class DecayHandler implements Listener
 		).getTaskId();
 	}
 
-	public static DecayHandler GetInstance(JavaPlugin plugin)
+	public static DecayFoodHandler GetInstance(JavaPlugin plugin)
 	{
-		if(_decayHandler == null)
-			_decayHandler = new DecayHandler(plugin);
+		if(_decayFoodHandler == null)
+			_decayFoodHandler = new DecayFoodHandler(plugin);
 
-		return _decayHandler;
+		return _decayFoodHandler;
 	}
 
 	public static void UpdateConfig(FileConfiguration config)

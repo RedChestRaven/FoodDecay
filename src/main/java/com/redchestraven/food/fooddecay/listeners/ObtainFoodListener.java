@@ -1,10 +1,8 @@
 package com.redchestraven.food.fooddecay.listeners;
 
-import com.redchestraven.food.fooddecay.DecayHandler;
+import com.redchestraven.food.fooddecay.handlers.DecayFoodHandler;
 import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.CustomDataKeys;
-import com.redchestraven.food.fooddecay.consts.EventNames;
-import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -22,8 +20,7 @@ public final class ObtainFoodListener implements Listener
 {
 	private static final Logger logger = Logger.getLogger("FoodDecay");
 	private static ObtainFoodListener _obtainFoodListener = null;
-	private static DecayHandler _decayHandler;
-	private static final Map<String, Boolean> _enabledEvents = new HashMap<>();
+	private static DecayFoodHandler _decayFoodHandler;
 	private static final List<InventoryAction> _pickupActions = List.of(InventoryAction.HOTBAR_SWAP, InventoryAction.PICKUP_ALL,
 			InventoryAction.PICKUP_HALF, InventoryAction.SWAP_WITH_CURSOR, InventoryAction.MOVE_TO_OTHER_INVENTORY,
 			InventoryAction.HOTBAR_MOVE_AND_READD, InventoryAction.DROP_ONE_SLOT, InventoryAction.DROP_ALL_SLOT);
@@ -31,8 +28,7 @@ public final class ObtainFoodListener implements Listener
 
 	private ObtainFoodListener(JavaPlugin plugin)
 	{
-		_decayHandler = DecayHandler.GetInstance(plugin);
-		UpdateConfig(plugin.getConfig());
+		_decayFoodHandler = DecayFoodHandler.GetInstance(plugin);
 	}
 
 	public static ObtainFoodListener GetInstance(JavaPlugin plugin)
@@ -43,61 +39,40 @@ public final class ObtainFoodListener implements Listener
 		return _obtainFoodListener;
 	}
 
-	public static void UpdateConfig(FileConfiguration config)
-	{
-		//logger.info("Events after reload: " + _enabledEvents.get(EventNames.onPickupByPlayer)
-		//				+ " | "	+ _enabledEvents.get(EventNames.onPickupByHopper)
-		//				+ " | "	+ _enabledEvents.get(EventNames.onMoveToOtherInventory)
-		//				+ " | " + _enabledEvents.get(EventNames.onPlayerPickupFromOtherInventory));
-
-		_enabledEvents.clear();
-		_enabledEvents.put(EventNames.onPickupByPlayer, config.getBoolean(EventNames.onPickupByPlayer));
-		_enabledEvents.put(EventNames.onPickupByHopper, config.getBoolean(EventNames.onPickupByHopper));
-		_enabledEvents.put(EventNames.onNonPlayerMoveToOtherInventory, config.getBoolean(EventNames.onNonPlayerMoveToOtherInventory));
-		_enabledEvents.put(EventNames.onPlayerPickupFromOtherInventory, config.getBoolean(EventNames.onPlayerPickupFromOtherInventory));
-		_enabledEvents.put(EventNames.onCraftingFood, config.getBoolean(EventNames.onCraftingFood));
-
-		//logger.info("Events after reload: " + _enabledEvents.get(EventNames.onPickupByPlayer)
-		//		+ " | "	+ _enabledEvents.get(EventNames.onPickupByHopper)
-		//		+ " | "	+ _enabledEvents.get(EventNames.onMoveToOtherInventory)
-		//		+ " | " + _enabledEvents.get(EventNames.onPlayerPickupFromOtherInventory));
-	}
-
 	@EventHandler
 	public void OnPlayerPickupFood(EntityPickupItemEvent epie)
 	{
-		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onPickupByPlayer) && epie.getEntity() instanceof Player)
+		if(FoodDecay._enabled && epie.getEntity() instanceof Player)
 		{
 			ItemStack droppedItemStack = epie.getItem().getItemStack();
-			_decayHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
+			_decayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
 		}
 	}
 
 	@EventHandler
 	public void OnHopperPickupFood(InventoryPickupItemEvent ipie)
 	{
-		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onPickupByHopper))
+		if(FoodDecay._enabled)
 		{
 			ItemStack droppedItemStack = ipie.getItem().getItemStack();
-			_decayHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
+			_decayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
 		}
 	}
 
 	@EventHandler
 	public void OnNonPlayerMoveToOtherInventory(InventoryMoveItemEvent imie)
 	{
-		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onNonPlayerMoveToOtherInventory)
-				&& !imie.getSource().equals(imie.getDestination()))
+		if(FoodDecay._enabled && !imie.getSource().equals(imie.getDestination()))
 		{
 			ItemStack movedItemStack = imie.getItem();
-			_decayHandler.AddDecayTimeIfDecayingFood(movedItemStack);
+			_decayFoodHandler.AddDecayTimeIfDecayingFood(movedItemStack);
 		}
 	}
 
 	@EventHandler
 	public void OnPlayerPickupFromOtherInventory(InventoryClickEvent ice)
 	{
-		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onPlayerPickupFromOtherInventory))
+		if(FoodDecay._enabled)
 		{
 			logger.info("Pickup action is " + ice.getAction());
 			Inventory topInventory = ice.getClickedInventory();
@@ -106,7 +81,7 @@ public final class ObtainFoodListener implements Listener
 					&& _pickupActions.contains(ice.getAction())
 					&& ice.getCurrentItem() != null)
 			{
-				_decayHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
+				_decayFoodHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
 			}
 		}
 	}
@@ -114,7 +89,7 @@ public final class ObtainFoodListener implements Listener
 	@EventHandler
 	public void OnCraftingFood(CraftItemEvent cie)
 	{
-		if(FoodDecay._enabled && _enabledEvents.get(EventNames.onCraftingFood))
+		if(FoodDecay._enabled)
 		{
 			logger.info("Craft triggered!");
 			logger.info("Click used: " + cie.getAction());
@@ -127,7 +102,7 @@ public final class ObtainFoodListener implements Listener
 				ItemStack result = cie.getRecipe().getResult();
 				int resultSize = result.getAmount();
 
-				_decayHandler.AddDecayTimeIfDecayingFood(result);
+				_decayFoodHandler.AddDecayTimeIfDecayingFood(result);
 				if(result.getItemMeta().getPersistentDataContainer().has(cdk.expirationDate, PersistentDataType.STRING))
 				{
 					logger.info("Crafted item is a decaying food, handling crafting myself...");
@@ -255,7 +230,7 @@ public final class ObtainFoodListener implements Listener
 			else
 			{
 				logger.info("Single craft, so regular handling...");
-				_decayHandler.AddDecayTimeIfDecayingFood(cie.getCurrentItem());
+				_decayFoodHandler.AddDecayTimeIfDecayingFood(cie.getCurrentItem());
 			}
 
 			logger.info("Done handling craft");
