@@ -2,7 +2,6 @@ package com.redchestraven.food.fooddecay.commands;
 
 import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
-import com.redchestraven.food.fooddecay.consts.EventNames;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
@@ -202,27 +201,6 @@ public final class VerifyCommand implements CommandExecutor
 				logger.severe("This world does not exist on your server! Disabling FoodDecay...");
 				return false;
 			}
-		}
-
-		/*============================================*
-		 | Verifying if at least one event is enabled |
-		 *============================================*/
-		logger.info("Worlds verified, verifying enabled events...");
-		boolean atLeastOneEventEnabled = _config.getBoolean(EventNames.onDropFromBlockBreak)
-				|| _config.getBoolean(EventNames.onContainerLootGenerated)
-				|| _config.getBoolean(EventNames.onDropFromEntityDeath)
-				|| _config.getBoolean(EventNames.onFishedUp)
-				|| _config.getBoolean(EventNames.onPickupByPlayer)
-				|| _config.getBoolean(EventNames.onPickupByHopper)
-				|| _config.getBoolean(EventNames.onNonPlayerMoveToOtherInventory)
-				|| _config.getBoolean(EventNames.onPlayerPickupFromOtherInventory)
-				|| _config.getBoolean(EventNames.onTradeForFood)
-				|| _config.getBoolean(EventNames.onCraftingFood);
-
-		if(!atLeastOneEventEnabled)
-		{
-			logger.severe("No events to make food decaying are enabled! Enable at least one of them to re-enable the plugin again. Disabling FoodDecay...");
-			return false;
 		}
 
 		return true;

@@ -37,23 +37,6 @@ Worlds:
   #- 'World'
 
 # !!! CAUTION !!!
-# !!! Below are advanced settings, and are only meant to be changed if you understand the repercussions !!!
-
-# These events are directly tied to when decaying foods are checked if they have their time of decay, and add it if it isn't yet.
-# The default values should offer a more, if not most, optimized net to catch all situations. If it still falls short,
-# you can turn more checks on at the risk of reducing performance.
-OnDropFromBlockBreak: true
-OnContainerLootGenerated: true
-OnDropFromEntityDeath: true
-OnFishedUp: true
-OnPickupByPlayer: false
-OnPickupByHopper: false
-OnNonPlayerMoveToOtherInventory: false
-OnPlayerPickupFromOtherInventory: false
-OnTradeForFood: true
-OnCraftingFood: true
-
-# !!! CAUTION !!!
 # !!! Messing with the values under here might seriously break the plugin !!!
 # !!! Under no circumstance, change these values !!!
 Version: 0

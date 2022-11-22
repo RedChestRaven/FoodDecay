@@ -2,6 +2,7 @@ package com.redchestraven.food.fooddecay;
 
 import com.redchestraven.food.fooddecay.commands.*;
 import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
+import com.redchestraven.food.fooddecay.handlers.DecayFoodHandler;
 import com.redchestraven.food.fooddecay.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -60,9 +61,8 @@ public final class FoodDecay extends JavaPlugin
 
 		// Register events
 		logger.info("Registering events...");
-		Bukkit.getPluginManager().registerEvents(DecayHandler.GetInstance(this), this);
+		Bukkit.getPluginManager().registerEvents(DecayFoodHandler.GetInstance(this), this);
 		Bukkit.getPluginManager().registerEvents(ObtainFoodListener.GetInstance(this), this);
-		Bukkit.getPluginManager().registerEvents(GenerateFoodAsLootListener.GetInstance(this), this);
 		Bukkit.getPluginManager().registerEvents(TradeForFoodListener.GetInstance(this), this);
 		logger.info("Events registered!");
 

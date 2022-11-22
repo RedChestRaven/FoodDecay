@@ -1,6 +1,6 @@
 package com.redchestraven.food.fooddecay.commands;
 
-import com.redchestraven.food.fooddecay.DecayHandler;
+import com.redchestraven.food.fooddecay.handlers.DecayFoodHandler;
 import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.listeners.*;
 import org.bukkit.command.Command;
@@ -34,10 +34,7 @@ public final class ReloadCommand implements CommandExecutor
 		if (FoodDecay._enabled)
 		{
 			logger.info("Config verified, applying changes!");
-			DecayHandler.UpdateConfig(config);
-			GenerateFoodAsLootListener.UpdateConfig(config);
-			ObtainFoodListener.UpdateConfig(config);
-			TradeForFoodListener.UpdateConfig(config);
+			DecayFoodHandler.UpdateConfig(config);
 			logger.info("Changes applied, FoodDecay is fully ready to go!");
 		}
 		else
