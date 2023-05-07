@@ -11,5 +11,6 @@ public final class CustomDataKeys
 	// Just to make it easier to add new NamespacedKeys
 	private static final Plugin plugin = Bukkit.getPluginManager().getPlugin("FoodDecay");
 
-	public final NamespacedKey expirationDate = new NamespacedKey(plugin, "expirationtime");
+	public static final NamespacedKey expirationDate = new NamespacedKey(plugin, "expirationtime");
+	public static final NamespacedKey pausedTimeLeft = new NamespacedKey(plugin, "pausedTimeLeft");
 }

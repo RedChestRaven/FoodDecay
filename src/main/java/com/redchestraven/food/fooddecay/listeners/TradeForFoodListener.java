@@ -13,7 +13,6 @@ import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.inventory.*;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,20 +22,17 @@ public final class TradeForFoodListener implements Listener
 {
 	private static final Logger logger = Logger.getLogger("FoodDecay");
 	private static TradeForFoodListener _tradeForFoodListener = null;
-	private static DecayFoodHandler _decayFoodHandler;
 	private static final List<InventoryAction> _pickupActions = List.of(InventoryAction.HOTBAR_SWAP, InventoryAction.PICKUP_ALL,
 			InventoryAction.PICKUP_HALF, InventoryAction.SWAP_WITH_CURSOR, InventoryAction.MOVE_TO_OTHER_INVENTORY);
 	private static final CustomDataKeys cdk = new CustomDataKeys();
 
-	private TradeForFoodListener(JavaPlugin plugin)
-	{
-		_decayFoodHandler = DecayFoodHandler.GetInstance(plugin);
-	}
+	private TradeForFoodListener()
+	{	}
 
-	public static TradeForFoodListener GetInstance(JavaPlugin plugin)
+	public static TradeForFoodListener GetInstance()
 	{
 		if(_tradeForFoodListener == null)
-			_tradeForFoodListener = new TradeForFoodListener(plugin);
+			_tradeForFoodListener = new TradeForFoodListener();
 
 		return _tradeForFoodListener;
 	}
@@ -55,7 +51,7 @@ public final class TradeForFoodListener implements Listener
 			{
 				logger.info("Click used: " + ice.getAction());
 				ItemStack result = new ItemStack(ice.getCurrentItem());
-				_decayFoodHandler.AddDecayTimeIfDecayingFood(result);
+				DecayFoodHandler.AddDecayTimeIfDecayingFood(result);
 
 				//The above already handles if it's a regular click, so the code below is purely for when it's a shift-click
 				if(result.getItemMeta().getPersistentDataContainer().has(cdk.expirationDate, PersistentDataType.STRING))
@@ -209,7 +205,7 @@ public final class TradeForFoodListener implements Listener
 					else
 					{
 						logger.info("Single trade, so regular handling...");
-						_decayFoodHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
+						DecayFoodHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
 					}
 				}
 
