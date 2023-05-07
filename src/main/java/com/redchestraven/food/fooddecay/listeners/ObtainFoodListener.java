@@ -11,7 +11,6 @@ import org.bukkit.event.inventory.*;
 import org.bukkit.inventory.*;
 import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
-import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.*;
 import java.util.logging.Logger;
@@ -20,21 +19,18 @@ public final class ObtainFoodListener implements Listener
 {
 	private static final Logger logger = Logger.getLogger("FoodDecay");
 	private static ObtainFoodListener _obtainFoodListener = null;
-	private static DecayFoodHandler _decayFoodHandler;
 	private static final List<InventoryAction> _pickupActions = List.of(InventoryAction.HOTBAR_SWAP, InventoryAction.PICKUP_ALL,
 			InventoryAction.PICKUP_HALF, InventoryAction.SWAP_WITH_CURSOR, InventoryAction.MOVE_TO_OTHER_INVENTORY,
 			InventoryAction.HOTBAR_MOVE_AND_READD, InventoryAction.DROP_ONE_SLOT, InventoryAction.DROP_ALL_SLOT);
 	private static final CustomDataKeys cdk = new CustomDataKeys();
 
-	private ObtainFoodListener(JavaPlugin plugin)
-	{
-		_decayFoodHandler = DecayFoodHandler.GetInstance(plugin);
-	}
+	private ObtainFoodListener()
+	{	}
 
-	public static ObtainFoodListener GetInstance(JavaPlugin plugin)
+	public static ObtainFoodListener GetInstance()
 	{
 		if(_obtainFoodListener == null)
-			_obtainFoodListener = new ObtainFoodListener(plugin);
+			_obtainFoodListener = new ObtainFoodListener();
 
 		return _obtainFoodListener;
 	}
@@ -45,7 +41,7 @@ public final class ObtainFoodListener implements Listener
 		if(FoodDecay._enabled && epie.getEntity() instanceof Player)
 		{
 			ItemStack droppedItemStack = epie.getItem().getItemStack();
-			_decayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
+			DecayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
 		}
 	}
 
@@ -55,7 +51,7 @@ public final class ObtainFoodListener implements Listener
 		if(FoodDecay._enabled)
 		{
 			ItemStack droppedItemStack = ipie.getItem().getItemStack();
-			_decayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
+			DecayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
 		}
 	}
 
@@ -65,7 +61,7 @@ public final class ObtainFoodListener implements Listener
 		if(FoodDecay._enabled && !imie.getSource().equals(imie.getDestination()))
 		{
 			ItemStack movedItemStack = imie.getItem();
-			_decayFoodHandler.AddDecayTimeIfDecayingFood(movedItemStack);
+			DecayFoodHandler.AddDecayTimeIfDecayingFood(movedItemStack);
 		}
 	}
 
@@ -81,7 +77,7 @@ public final class ObtainFoodListener implements Listener
 					&& _pickupActions.contains(ice.getAction())
 					&& ice.getCurrentItem() != null)
 			{
-				_decayFoodHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
+				DecayFoodHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
 			}
 		}
 	}
@@ -102,7 +98,7 @@ public final class ObtainFoodListener implements Listener
 				ItemStack result = cie.getRecipe().getResult();
 				int resultSize = result.getAmount();
 
-				_decayFoodHandler.AddDecayTimeIfDecayingFood(result);
+				DecayFoodHandler.AddDecayTimeIfDecayingFood(result);
 				if(result.getItemMeta().getPersistentDataContainer().has(cdk.expirationDate, PersistentDataType.STRING))
 				{
 					logger.info("Crafted item is a decaying food, handling crafting myself...");
@@ -230,7 +226,7 @@ public final class ObtainFoodListener implements Listener
 			else
 			{
 				logger.info("Single craft, so regular handling...");
-				_decayFoodHandler.AddDecayTimeIfDecayingFood(cie.getCurrentItem());
+				DecayFoodHandler.AddDecayTimeIfDecayingFood(cie.getCurrentItem());
 			}
 
 			logger.info("Done handling craft");

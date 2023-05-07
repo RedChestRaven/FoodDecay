@@ -3,19 +3,21 @@
 # !!! Currently can trigger ANY material listed on https://hub.spigotmc.org/javadocs/bukkit/org/bukkit/Material.html !!!
 DecayingFoodGroups:
   Meats:
-    RateOfDecay: 45 #in seconds
+    RateOfDecay: 60 #in seconds
     DecayingFoods:
       - 'Beef'
       - 'Chicken'
       - 'Porkchop'
       - 'rabbit stew'
+      - 'cooked_porkchop'
+      - 'cooked salmon'
   Fish:
     RateOfDecay: 30 #in seconds
     DecayingFoods:
       - 'Cod'
       - 'Salmon'
   Plants:
-    RateOfDecay: 60 #in seconds
+    RateOfDecay: 120 #in seconds
     DecayingFoods:
       - 'Bread'
       - 'Mushroom stew'
@@ -29,12 +31,13 @@ DecayStoppers:
   - 'Packed Ice'
   - 'blue ice'
 
-RateOfDecay: 120 #in seconds
 DecayCheckInterval: 10 #in seconds
 
 Worlds:
-  - 'Testing'
-  #- 'World'
+  - 'testing'
+  - 'testing_nether'
+  #- 'Random comment'
+  #- 'testing some more'
 
 # !!! CAUTION !!!
 # !!! Messing with the values under here might seriously break the plugin !!!

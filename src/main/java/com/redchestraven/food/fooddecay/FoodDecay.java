@@ -2,11 +2,12 @@ package com.redchestraven.food.fooddecay;
 
 import com.redchestraven.food.fooddecay.commands.*;
 import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
-import com.redchestraven.food.fooddecay.handlers.DecayFoodHandler;
+import com.redchestraven.food.fooddecay.handlers.*;
 import com.redchestraven.food.fooddecay.listeners.*;
 import org.bukkit.Bukkit;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.Objects;
 import java.util.Set;
 import java.util.logging.Logger;
 
@@ -55,15 +56,23 @@ public final class FoodDecay extends JavaPlugin
 			logger.info("Default config created!");
 		}
 
+		// Make Handlers and update their configs
+		logger.info("Starting handlers and updating their configs...");
+		DecayFoodHandler.GetInstance(this);
+		DecayPauseHandler.GetInstance(this);
+		logger.info("Handlers started with updated configs!");
+
 		// Add commands
-		getCommand("fd verify").setExecutor(new VerifyCommand(this));
-		getCommand("fd reload").setExecutor(new ReloadCommand(this));
+		logger.info("Setting up command listeners...");
+		Objects.requireNonNull(getCommand("fd verify")).setExecutor(new VerifyCommand(this));
+		Objects.requireNonNull(getCommand("fd reload")).setExecutor(new ReloadCommand(this));
+		logger.info("Command listeners set up!");
 
 		// Register events
 		logger.info("Registering events...");
-		Bukkit.getPluginManager().registerEvents(DecayFoodHandler.GetInstance(this), this);
-		Bukkit.getPluginManager().registerEvents(ObtainFoodListener.GetInstance(this), this);
-		Bukkit.getPluginManager().registerEvents(TradeForFoodListener.GetInstance(this), this);
+		Bukkit.getPluginManager().registerEvents(ObtainFoodListener.GetInstance(), this);
+		Bukkit.getPluginManager().registerEvents(TradeForFoodListener.GetInstance(), this);
+		Bukkit.getPluginManager().registerEvents(PauseDecayListener.GetInstance(), this);
 		logger.info("Events registered!");
 
 		if(_enabled)

@@ -1,8 +1,7 @@
 package com.redchestraven.food.fooddecay.handlers;
 
 import com.redchestraven.food.fooddecay.FoodDecay;
-import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
-import com.redchestraven.food.fooddecay.consts.CustomDataKeys;
+import com.redchestraven.food.fooddecay.consts.*;
 import com.redchestraven.food.fooddecay.customtypes.DecayingFoodGroup;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -14,7 +13,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -30,7 +28,7 @@ import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
-public final class DecayFoodHandler implements Listener
+public final class DecayFoodHandler
 {
 	private static DecayFoodHandler _decayFoodHandler = null;
 	private static JavaPlugin _plugin;
@@ -64,6 +62,14 @@ public final class DecayFoodHandler implements Listener
 		lore.add(ChatColor.DARK_PURPLE + "Maybe this can still be used some way?");
 		rottenFoodMeta.setLore(lore);
 		_rottenFood.setItemMeta(rottenFoodMeta);
+	}
+
+	public static DecayFoodHandler GetInstance(JavaPlugin plugin)
+	{
+		if(_decayFoodHandler == null)
+			_decayFoodHandler = new DecayFoodHandler(plugin);
+
+		return _decayFoodHandler;
 	}
 
 	private static void StartRepeatingDecayCheck(JavaPlugin plugin)
@@ -130,14 +136,6 @@ public final class DecayFoodHandler implements Listener
 				(_decayCheckInterval * 20L), // In server ticks. 1 second = 20 server ticks
 				(_decayCheckInterval * 20L) // In server ticks. 1 second = 20 server ticks
 		).getTaskId();
-	}
-
-	public static DecayFoodHandler GetInstance(JavaPlugin plugin)
-	{
-		if(_decayFoodHandler == null)
-			_decayFoodHandler = new DecayFoodHandler(plugin);
-
-		return _decayFoodHandler;
 	}
 
 	public static void UpdateConfig(FileConfiguration config)
@@ -233,7 +231,7 @@ public final class DecayFoodHandler implements Listener
 		return calendar.getTime().before(nowDate);
 	}
 
-	public void AddDecayTimeIfDecayingFood(ItemStack itemStackToCheck)
+	public static void AddDecayTimeIfDecayingFood(ItemStack itemStackToCheck)
 	{
 		for(DecayingFoodGroup decayingFoodGroup: _decayingFoodGroups)
 		{
