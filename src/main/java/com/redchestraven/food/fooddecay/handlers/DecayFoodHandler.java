@@ -3,6 +3,7 @@ package com.redchestraven.food.fooddecay.handlers;
 import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.*;
 import com.redchestraven.food.fooddecay.customtypes.DecayingFoodGroup;
+import com.redchestraven.food.fooddecay.helpers.Predicates;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Chunk;
@@ -10,8 +11,6 @@ import org.bukkit.Material;
 import org.bukkit.block.BlockState;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
@@ -21,10 +20,8 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
+import java.time.LocalDateTime;
 import java.util.*;
-import java.util.function.Predicate;
 import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
@@ -32,12 +29,8 @@ public final class DecayFoodHandler
 {
 	private static DecayFoodHandler _decayFoodHandler = null;
 	private static JavaPlugin _plugin;
-	private static final CustomDataKeys _customDataKeys = new CustomDataKeys();
 	private static final Logger logger = Logger.getLogger("FoodDecay");
-	private static final DateFormat _internalTimeFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
-	private static final DateFormat _loreTimeFormat = new SimpleDateFormat("dd MMM HH:mm");
-	private static ContainerChecker _containerChecker;
-	private static StorageEntityChecker _storageEntityChecker;
+	private static Predicates _predicates;
 	private static int _decayCheckerTaskId = -1;
 	private static List<String> _activeWorlds = new ArrayList<>();
 
@@ -49,9 +42,7 @@ public final class DecayFoodHandler
 	private DecayFoodHandler(JavaPlugin plugin)
 	{
 		_plugin = plugin;
-		_containerChecker = new ContainerChecker();
-		_storageEntityChecker = new StorageEntityChecker();
-		UpdateConfig(plugin.getConfig()); // This will also start the repeating task
+		_predicates = Predicates.GetInstance();
 
 		//Creating rotten food item to replace food with
 		_rottenFood = new ItemStack(Material.ROTTEN_FLESH);
@@ -62,11 +53,13 @@ public final class DecayFoodHandler
 		lore.add(ChatColor.DARK_PURPLE + "Maybe this can still be used some way?");
 		rottenFoodMeta.setLore(lore);
 		_rottenFood.setItemMeta(rottenFoodMeta);
+
+		UpdateConfig(plugin.getConfig()); // This will also start the repeating task
 	}
 
 	public static DecayFoodHandler GetInstance(JavaPlugin plugin)
 	{
-		if(_decayFoodHandler == null)
+		if (_decayFoodHandler == null)
 			_decayFoodHandler = new DecayFoodHandler(plugin);
 
 		return _decayFoodHandler;
@@ -76,7 +69,7 @@ public final class DecayFoodHandler
 	{
 		_decayCheckerTaskId = Bukkit.getScheduler().runTaskTimer(plugin,
 				() -> { // This is a lambda expression to create an anonymous Runnable.
-					if(FoodDecay._enabled)
+					if (FoodDecay._enabled)
 					{
 						Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
 						//logger.info("There are " + onlinePlayers.size() + " online players to check.");
@@ -87,7 +80,7 @@ public final class DecayFoodHandler
 						}
 						//logger.info("Players have been checked, and food has been decayed. Moving on to containers...");
 
-						for(String worldName: _activeWorlds)
+						for (String worldName: _activeWorlds)
 						{
 							Chunk[] loadedChunks = Bukkit.getWorld(worldName).getLoadedChunks();
 							//int totalEntitiesLoaded = 0;
@@ -97,7 +90,7 @@ public final class DecayFoodHandler
 								{
 									// Looking for blocks with inventories. Not all of these are entities, like the furnace, so I
 									// need to use this method for those.
-									List<BlockState> containers = Arrays.stream(chunk.getTileEntities()).filter(_containerChecker).collect(Collectors.toList());
+									List<BlockState> containers = Arrays.stream(chunk.getTileEntities()).filter(_predicates.GetContainerChecker()).collect(Collectors.toList());
 									//totalEntitiesLoaded += containers.size();
 									if (containers.size() > 0)
 									{
@@ -115,7 +108,7 @@ public final class DecayFoodHandler
 
 									// Vehicles, however, are Entities and can be InventoryHolders, but won't have a BlockState,
 									// so I'm getting them this way.
-									Object[] entities = Arrays.stream(chunk.getEntities()).filter(_storageEntityChecker).toArray();
+									Object[] entities = Arrays.stream(chunk.getEntities()).filter(_predicates.GetStorageEntityChecker()).toArray();
 									//totalEntitiesLoaded += entities.length;
 									if (entities.length > 0)
 									{
@@ -142,7 +135,7 @@ public final class DecayFoodHandler
 	{
 		_decayingFoodGroups.clear();
 		ConfigurationSection decayingFoodGroups = config.getConfigurationSection(ConfigSettingNames.decayingFoodGroups);
-		for(String decayingFoodGroupName: decayingFoodGroups.getKeys(false))
+		for (String decayingFoodGroupName: decayingFoodGroups.getKeys(false))
 		{
 			int decayingFoodGroupRateOfDecay = decayingFoodGroups.getInt(decayingFoodGroupName + "." + ConfigSettingNames.rateOfDecay);
 			ArrayList<Material> decayingFoods = new ArrayList<>();
@@ -155,7 +148,7 @@ public final class DecayFoodHandler
 		}
 
 		_decayStoppers.clear();
-		for(String decayStopperName: config.getStringList(ConfigSettingNames.decayStoppers))
+		for (String decayStopperName: config.getStringList(ConfigSettingNames.decayStoppers))
 		{
 			// Making sure Material is always correctly formatted, while allowing for spaces being used to make the config more readable
 			_decayStoppers.add(Material.getMaterial(decayStopperName.toUpperCase().replace(' ', '_')));
@@ -165,13 +158,13 @@ public final class DecayFoodHandler
 
 		_activeWorlds = config.getStringList(ConfigSettingNames.worlds);
 
-		if(_decayCheckerTaskId != -1) Bukkit.getScheduler().cancelTask(_decayCheckerTaskId);
+		if (_decayCheckerTaskId != -1) Bukkit.getScheduler().cancelTask(_decayCheckerTaskId);
 		StartRepeatingDecayCheck(_plugin);
 	}
 
 	private static void DecayInventory(Inventory inventory)
 	{
-		for(Material _decayStopper : _decayStoppers)
+		for (Material _decayStopper : _decayStoppers)
 		{
 			if (_decayStopper != null && inventory.contains(_decayStopper))
 			{
@@ -180,7 +173,7 @@ public final class DecayFoodHandler
 			}
 		}
 
-		for(DecayingFoodGroup decayingFoodGroup: _decayingFoodGroups)
+		for (DecayingFoodGroup decayingFoodGroup: _decayingFoodGroups)
 		{
 			for (Material _decayingFood: decayingFoodGroup.GetDecayingFoods())
 			{
@@ -195,8 +188,8 @@ public final class DecayFoodHandler
 						ItemStack invItemStack = similarItemStacks.get(invItemStackKey);
 						PersistentDataContainer invPdc = invItemStack.getItemMeta().getPersistentDataContainer();
 
-						if (invPdc.has(_customDataKeys.expirationDate, PersistentDataType.STRING)
-								&& CheckIfTimestampExpired(invPdc.get(_customDataKeys.expirationDate, PersistentDataType.STRING)))
+						if (invPdc.has(CustomDataKeys.expirationDate, PersistentDataType.STRING)
+								&& CheckIfTimestampExpired(invPdc.get(CustomDataKeys.expirationDate, PersistentDataType.STRING)))
 						{
 							//logger.info("Rotting food found, converting...");
 							_rottenFood.setAmount(invItemStack.getAmount());
@@ -214,44 +207,42 @@ public final class DecayFoodHandler
 
 	private static boolean CheckIfTimestampExpired(String _foodDecayTimestamp)
 	{
-		Calendar calendar = Calendar.getInstance();
 		String[] foodDecayTimestamp = _foodDecayTimestamp.split("-");
 
-		Date nowDate = calendar.getTime();
-		logger.info("Now: " + _internalTimeFormat.format(calendar.getTime()));
+		LocalDateTime nowDate = LocalDateTime.now();
+		logger.info("Now: " + nowDate.format(Formatters.internalTimeFormat));
 
-		calendar.set(Integer.parseInt(foodDecayTimestamp[0]),		//Year
-				Integer.parseInt(foodDecayTimestamp[1]) - 1,	//Month, only one that starts at 0, so need to do -1 for the right month
-				Integer.parseInt(foodDecayTimestamp[2]),			//Day
-				Integer.parseInt(foodDecayTimestamp[3]),			//Hour
-				Integer.parseInt(foodDecayTimestamp[4]),			//Minute
-				Integer.parseInt(foodDecayTimestamp[5]));			//Second
-		logger.info("ExpirationTime: " + _internalTimeFormat.format(calendar.getTime()));
+		nowDate.withYear(Integer.parseInt(foodDecayTimestamp[0]))		//Year
+			.withMonth(Integer.parseInt(foodDecayTimestamp[1]))			//Month
+			.withDayOfMonth(Integer.parseInt(foodDecayTimestamp[2]))	//Day
+			.withHour(Integer.parseInt(foodDecayTimestamp[3]))			//Hour
+			.withMinute(Integer.parseInt(foodDecayTimestamp[4]))		//Minute
+			.withSecond(Integer.parseInt(foodDecayTimestamp[5]));		//Second
+		logger.info("ExpirationTime: " + nowDate.format(Formatters.internalTimeFormat));
 
-		return calendar.getTime().before(nowDate);
+		return LocalDateTime.now().isBefore(nowDate);
 	}
 
 	public static void AddDecayTimeIfDecayingFood(ItemStack itemStackToCheck)
 	{
-		for(DecayingFoodGroup decayingFoodGroup: _decayingFoodGroups)
+		for (DecayingFoodGroup decayingFoodGroup: _decayingFoodGroups)
 		{
 			if (decayingFoodGroup.GetDecayingFoods().contains(itemStackToCheck.getType()))
 			{
 				ItemMeta itemMetaToCheck = itemStackToCheck.getItemMeta();
 				PersistentDataContainer pdcToCheck = itemMetaToCheck.getPersistentDataContainer();
 				//logger.info("Got pdc of dropped item: " + droppedPdc.hashCode() + ". It has " + droppedPdc.getKeys().size() + " keys.");
-				if (!pdcToCheck.has(_customDataKeys.expirationDate, PersistentDataType.STRING))
+				if (!pdcToCheck.has(CustomDataKeys.expirationDate, PersistentDataType.STRING))
 				{
 					//logger.info("There is no expiration date stored yet...");
-					Calendar now = Calendar.getInstance();
-					now.add(Calendar.SECOND, decayingFoodGroup.GetRateOfDecay());
-					pdcToCheck.set(_customDataKeys.expirationDate, PersistentDataType.STRING, _internalTimeFormat.format(now.getTime()));
+					LocalDateTime decayTimestamp = LocalDateTime.now().plusSeconds(decayingFoodGroup.GetRateOfDecay());
+					pdcToCheck.set(CustomDataKeys.expirationDate, PersistentDataType.STRING, decayTimestamp.format(Formatters.internalTimeFormat));
 
 					List<String> lore = new ArrayList<>();
 					if (itemMetaToCheck.hasLore())
 						lore = itemMetaToCheck.getLore();
 					lore.add(ChatColor.DARK_GREEN + "Will decay at:");
-					lore.add(ChatColor.DARK_GREEN + _loreTimeFormat.format(now.getTime()));
+					lore.add(ChatColor.DARK_GREEN + decayTimestamp.format(Formatters.loreTimeFormat));
 					itemMetaToCheck.setLore(lore);
 
 					itemStackToCheck.setItemMeta(itemMetaToCheck);
@@ -259,35 +250,5 @@ public final class DecayFoodHandler
 				}
 			}
 		}
-	}
-}
-
-class ContainerChecker implements Predicate<BlockState>
-{
-	// Enderchest is tied to a player, so it would have to be checked through them!
-	private final List<Material> containers = List.of(Material.BARREL, Material.BLAST_FURNACE, Material.CHEST, Material.DISPENSER,
-			Material.DROPPER, Material.FURNACE, Material.HOPPER, Material.SHULKER_BOX, Material.SMOKER,
-			Material.TRAPPED_CHEST,	Material.WHITE_SHULKER_BOX, Material.ORANGE_SHULKER_BOX, Material.MAGENTA_SHULKER_BOX,
-			Material.LIGHT_BLUE_SHULKER_BOX, Material.YELLOW_SHULKER_BOX, Material.LIME_SHULKER_BOX,
-			Material.PINK_SHULKER_BOX, Material.GRAY_SHULKER_BOX, Material.LIGHT_GRAY_SHULKER_BOX,
-			Material.CYAN_SHULKER_BOX, Material.PURPLE_SHULKER_BOX, Material.BLUE_SHULKER_BOX, Material.BROWN_SHULKER_BOX,
-			Material.GREEN_SHULKER_BOX, Material.RED_SHULKER_BOX, Material.BLACK_SHULKER_BOX);
-
-	@Override
-	public boolean test(BlockState blockState)
-	{
-		return containers.contains(blockState.getBlockData().getMaterial());
-	}
-}
-
-class StorageEntityChecker implements Predicate<Entity>
-{
-	private final List<EntityType> entities = List.of(EntityType.MINECART_HOPPER, EntityType.MINECART_CHEST,
-			EntityType.MULE, EntityType.DONKEY, EntityType.LLAMA, EntityType.TRADER_LLAMA);
-
-	@Override
-	public boolean test(Entity entity)
-	{
-		return entities.contains(entity.getType());
 	}
 }

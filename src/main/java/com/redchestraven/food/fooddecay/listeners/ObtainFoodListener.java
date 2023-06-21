@@ -1,5 +1,6 @@
 package com.redchestraven.food.fooddecay.listeners;
 
+import com.redchestraven.food.fooddecay.consts.InvActionGroups;
 import com.redchestraven.food.fooddecay.handlers.DecayFoodHandler;
 import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.CustomDataKeys;
@@ -19,17 +20,13 @@ public final class ObtainFoodListener implements Listener
 {
 	private static final Logger logger = Logger.getLogger("FoodDecay");
 	private static ObtainFoodListener _obtainFoodListener = null;
-	private static final List<InventoryAction> _pickupActions = List.of(InventoryAction.HOTBAR_SWAP, InventoryAction.PICKUP_ALL,
-			InventoryAction.PICKUP_HALF, InventoryAction.SWAP_WITH_CURSOR, InventoryAction.MOVE_TO_OTHER_INVENTORY,
-			InventoryAction.HOTBAR_MOVE_AND_READD, InventoryAction.DROP_ONE_SLOT, InventoryAction.DROP_ALL_SLOT);
-	private static final CustomDataKeys cdk = new CustomDataKeys();
 
 	private ObtainFoodListener()
 	{	}
 
 	public static ObtainFoodListener GetInstance()
 	{
-		if(_obtainFoodListener == null)
+		if (_obtainFoodListener == null)
 			_obtainFoodListener = new ObtainFoodListener();
 
 		return _obtainFoodListener;
@@ -38,7 +35,7 @@ public final class ObtainFoodListener implements Listener
 	@EventHandler
 	public void OnPlayerPickupFood(EntityPickupItemEvent epie)
 	{
-		if(FoodDecay._enabled && epie.getEntity() instanceof Player)
+		if (FoodDecay._enabled && epie.getEntity() instanceof Player)
 		{
 			ItemStack droppedItemStack = epie.getItem().getItemStack();
 			DecayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
@@ -48,7 +45,7 @@ public final class ObtainFoodListener implements Listener
 	@EventHandler
 	public void OnHopperPickupFood(InventoryPickupItemEvent ipie)
 	{
-		if(FoodDecay._enabled)
+		if (FoodDecay._enabled)
 		{
 			ItemStack droppedItemStack = ipie.getItem().getItemStack();
 			DecayFoodHandler.AddDecayTimeIfDecayingFood(droppedItemStack);
@@ -58,7 +55,7 @@ public final class ObtainFoodListener implements Listener
 	@EventHandler
 	public void OnNonPlayerMoveToOtherInventory(InventoryMoveItemEvent imie)
 	{
-		if(FoodDecay._enabled && !imie.getSource().equals(imie.getDestination()))
+		if (FoodDecay._enabled && !imie.getSource().equals(imie.getDestination()))
 		{
 			ItemStack movedItemStack = imie.getItem();
 			DecayFoodHandler.AddDecayTimeIfDecayingFood(movedItemStack);
@@ -68,13 +65,13 @@ public final class ObtainFoodListener implements Listener
 	@EventHandler
 	public void OnPlayerPickupFromOtherInventory(InventoryClickEvent ice)
 	{
-		if(FoodDecay._enabled)
+		if (FoodDecay._enabled)
 		{
 			logger.info("Pickup action is " + ice.getAction());
 			Inventory topInventory = ice.getClickedInventory();
-			if(topInventory != null && topInventory.getType() != InventoryType.PLAYER
+			if (topInventory != null && topInventory.getType() != InventoryType.PLAYER
 					&& ice.getSlotType() == InventoryType.SlotType.CONTAINER
-					&& _pickupActions.contains(ice.getAction())
+					&& InvActionGroups.pickupOtherInvActions.contains(ice.getAction())
 					&& ice.getCurrentItem() != null)
 			{
 				DecayFoodHandler.AddDecayTimeIfDecayingFood(ice.getCurrentItem());
@@ -85,21 +82,21 @@ public final class ObtainFoodListener implements Listener
 	@EventHandler
 	public void OnCraftingFood(CraftItemEvent cie)
 	{
-		if(FoodDecay._enabled)
+		if (FoodDecay._enabled)
 		{
 			logger.info("Craft triggered!");
 			logger.info("Click used: " + cie.getAction());
 
 			// Case of shift click, trying to make all possible from the crafting grid, and put them in the inventory
 			// myself, while cancelling the actual craft event
-			if(cie.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
+			if (cie.getAction() == InventoryAction.MOVE_TO_OTHER_INVENTORY)
 			{
 				logger.info("Multi craft, so special handling...");
 				ItemStack result = cie.getRecipe().getResult();
 				int resultSize = result.getAmount();
 
 				DecayFoodHandler.AddDecayTimeIfDecayingFood(result);
-				if(result.getItemMeta().getPersistentDataContainer().has(cdk.expirationDate, PersistentDataType.STRING))
+				if (result.getItemMeta().getPersistentDataContainer().has(CustomDataKeys.expirationDate, PersistentDataType.STRING))
 				{
 					logger.info("Crafted item is a decaying food, handling crafting myself...");
 					cie.setCancelled(true);
@@ -120,13 +117,13 @@ public final class ObtainFoodListener implements Listener
 													+ (resultTotalCrafted % resultMaxStackSize) > 0 ? 1 : 0 ;
 					ItemStack[] results = new ItemStack[amountOfStacksCrafted];
 					result.setAmount(result.getMaxStackSize());
-					for(int i = 0; i < amountOfStacksCrafted - 1; i++)
+					for (int i = 0; i < amountOfStacksCrafted - 1; i++)
 					{
 						logger.info("Full stack number " + i);
 						results[i] = new ItemStack(result);
 					}
 					// This is to accommodate for the possibility of a non-full stack being left over
-					if(resultTotalCrafted % resultMaxStackSize > 0)
+					if (resultTotalCrafted % resultMaxStackSize > 0)
 					{
 						result.setAmount(resultTotalCrafted - ((amountOfStacksCrafted - 1) * resultMaxStackSize));
 						logger.warning("Non-full stack! Size is " + result.getAmount());
@@ -137,17 +134,17 @@ public final class ObtainFoodListener implements Listener
 					}
 					results[amountOfStacksCrafted - 1] = new ItemStack(result);
 
-					for(ItemStack r: results)
+					for (ItemStack r: results)
 					{
 						logger.info("Stack size to put in inventory: " + r.getAmount());
 					}
 
 					HashMap<Integer, ItemStack> remainder = cie.getWhoClicked().getInventory().addItem(results);
-					for(ItemStack rr: remainder.values())
+					for (ItemStack rr: remainder.values())
 					{
 						logger.info("Remainder contains: " + rr.getAmount());
 					}
-					if(remainder.isEmpty())
+					if (remainder.isEmpty())
 					{
 						logger.info("All were crafted, clearing crafting inventory as far as needed...");
 						for (ItemStack ingredient : ingredients)
@@ -162,7 +159,7 @@ public final class ObtainFoodListener implements Listener
 						logger.warning("More food can be crafted than fits!");
 
 						int remainingAmount = 0;
-						for(ItemStack partOfRemainder: remainder.values())
+						for (ItemStack partOfRemainder: remainder.values())
 						{
 							remainingAmount += partOfRemainder.getAmount();
 						}
@@ -197,9 +194,9 @@ public final class ObtainFoodListener implements Listener
 								ItemStack stack = craftedFoods[i];
 								PersistentDataContainer pdc = stack.getItemMeta().getPersistentDataContainer();
 								if (stack.getAmount() > (resultSize - remainingAmount)
-										&& pdc.has(cdk.expirationDate, PersistentDataType.STRING)
-										&& pdc.get(cdk.expirationDate, PersistentDataType.STRING).equals(
-										result.getItemMeta().getPersistentDataContainer().get(cdk.expirationDate, PersistentDataType.STRING)))
+										&& pdc.has(CustomDataKeys.expirationDate, PersistentDataType.STRING)
+										&& pdc.get(CustomDataKeys.expirationDate, PersistentDataType.STRING).equals(
+										result.getItemMeta().getPersistentDataContainer().get(CustomDataKeys.expirationDate, PersistentDataType.STRING)))
 								{
 									logger.info("Found a stack of crafted item...");
 									keyToEdit = (int) craftedFoodsMap.keySet().toArray()[i];
@@ -213,7 +210,8 @@ public final class ObtainFoodListener implements Listener
 								ItemStack food = craftedFoodsMap.get(keyToEdit);
 								food.setAmount(food.getAmount() - (resultSize - (remainingAmount % resultSize)));
 								playerInv.setItem(keyToEdit, food);
-							} else
+							}
+							else
 							{
 								logger.warning("Couldn't find any crafted foods with correct timestamp!");
 							}
