@@ -33,6 +33,14 @@ DecayStoppers:
 
 DecayCheckInterval: 10 #in seconds
 
+# Simple decay check will perform all checks for decay and pausing each decay interval.
+# This reduces the amount of CPU used throughout server uptime even if it's more in peaks,
+# but at the same time is less accurate the more time is between intervals, and makes small
+# differences in rate of decay between food groups have less of an effect.
+# !!! CAUTION !!!
+# !!! Changing this setting to false will use an incomplete check in development !!!
+UseSimpleDecayCheck: true
+
 Worlds:
   - 'testing'
   - 'testing_nether'

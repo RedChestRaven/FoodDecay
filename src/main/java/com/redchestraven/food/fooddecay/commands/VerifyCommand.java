@@ -37,7 +37,7 @@ public final class VerifyCommand implements CommandExecutor
 		logger.info("Verifying loaded config...");
 		FoodDecay.SetEnabled(VerifyConfig());
 
-		if(FoodDecay._enabled)
+		if (FoodDecay._enabled)
 			logger.info("Config verified, enjoy FoodDecay!");
 		else
 			logger.severe("Config is incorrect, stopped FoodDecay...");
@@ -55,7 +55,7 @@ public final class VerifyCommand implements CommandExecutor
 		logger.info("Verifying decaying food groups...");
 		ConfigurationSection _decayingFoodGroups = _config.getConfigurationSection(ConfigSettingNames.decayingFoodGroups);
 
-		if(_decayingFoodGroups == null || _decayingFoodGroups.getKeys(false).isEmpty())
+		if (_decayingFoodGroups == null || _decayingFoodGroups.getKeys(false).isEmpty())
 		{
 			logger.severe("The food groups list is empty, missing or isn't correctly written. Disabling FoodDecay...");
 			return false;
@@ -64,7 +64,7 @@ public final class VerifyCommand implements CommandExecutor
 		{
 			//Check if each group has a valid rate of decay, and all decaying food is present in exactly one (1) group
 			HashSet<String> _decayingFoodNames = new HashSet<>();
-			for(String _decayingFoodGroupName: _decayingFoodGroups.getKeys(false))
+			for (String _decayingFoodGroupName: _decayingFoodGroups.getKeys(false))
 			{
 				//logger.info("Checking food group " + _decayingFoodGroupName);
 
@@ -91,7 +91,7 @@ public final class VerifyCommand implements CommandExecutor
 
 				//Check for food in this group not already existing in another group
 				List<String> _decayingFoods = _decayingFoodGroups.getStringList(_decayingFoodGroupName + "." + ConfigSettingNames.decayingFoods);
-				if(_decayingFoods == null || _decayingFoods.isEmpty())
+				if (_decayingFoods == null || _decayingFoods.isEmpty())
 				{
 					logger.severe("The food group list " + _decayingFoodGroupName
 							+ " is empty, missing or isn't correctly written. Disabling FoodDecay...");
@@ -99,10 +99,10 @@ public final class VerifyCommand implements CommandExecutor
 				}
 				else
 				{
-					for(String _decayingFoodName: _decayingFoods)
+					for (String _decayingFoodName: _decayingFoods)
 					{
 						//logger.info("Checking food " + _decayingFoodName);
-						if(!_decayingFoodNames.add(_decayingFoodName))
+						if (!_decayingFoodNames.add(_decayingFoodName))
 						{
 							logger.severe("The food " + _decayingFoodName
 									+ " is already present in a different group. Disabling FoodDecay...");
@@ -110,12 +110,12 @@ public final class VerifyCommand implements CommandExecutor
 						}
 
 						Material perishable = Material.getMaterial(_decayingFoodName.toUpperCase().replace(' ', '_'));
-						if(perishable == null)
+						if (perishable == null)
 						{
 							logger.severe("The food " + _decayingFoodName + " isn't a Material. Disabling FoodDecay...");
 							return false;
 						}
-						else if(!perishable.isItem())
+						else if (!perishable.isItem())
 						{
 							logger.severe("The food " + _decayingFoodName + " isn't an Item. Disabling FoodDecay...");
 							return false;
@@ -136,28 +136,28 @@ public final class VerifyCommand implements CommandExecutor
 		 *===============================*/
 		logger.info("Decaying foods verified, verifying decay stoppers...");
 		List<String> _decayStoppers = _config.getStringList(ConfigSettingNames.decayStoppers);
-		if(_decayStoppers.isEmpty())
+		if (_decayStoppers.isEmpty())
 		{
 			logger.severe("The decay stoppers list is empty, missing or isn't correctly written. Disabling FoodDecay...");
 			return false;
 		}
 		else
 		{
-			for(String _decayStopperName: _decayStoppers)
+			for (String _decayStopperName: _decayStoppers)
 			{
 				//logger.info("Checking decaystopper " + _decayStopperName);
-				if(!_decayStopperName.toLowerCase().contains("ice"))
+				if (!_decayStopperName.toLowerCase().contains("ice"))
 				{
 					logger.severe("The decaystopper " + _decayStopperName + " isn't a variant of ice. Disabling FoodDecay...");
 					return false;
 				}
 				Material perishable = Material.getMaterial(_decayStopperName.toUpperCase().replace(' ', '_'));
-				if(perishable == null)
+				if (perishable == null)
 				{
 					logger.severe("The decaystopper " + _decayStopperName + " isn't a Material. Disabling FoodDecay...");
 					return false;
 				}
-				else if(!perishable.isBlock())
+				else if (!perishable.isBlock())
 				{
 					logger.severe("The decaystopper " + _decayStopperName + " isn't a block. Disabling FoodDecay...");
 					return false;
@@ -172,7 +172,7 @@ public final class VerifyCommand implements CommandExecutor
 		String _decayIntervalString = _config.getString(ConfigSettingNames.decayCheckInterval);
 		try
 		{
-			if(_decayIntervalString != null)
+			if (_decayIntervalString != null)
 			{
 				int _decayInterval = Integer.parseInt(_decayIntervalString);
 				if (_decayInterval <= 0)
@@ -194,9 +194,9 @@ public final class VerifyCommand implements CommandExecutor
 		logger.info("Time-related settings verified, verifying worlds...");
 		List<String> _worldNamesFromConfig = _config.getStringList(ConfigSettingNames.worlds);
 		List<String> _existingWorldNames = Bukkit.getWorlds().stream().map(WorldInfo::getName).collect(Collectors.toList());
-		for(String worldNameFromConfig: _worldNamesFromConfig)
+		for (String worldNameFromConfig: _worldNamesFromConfig)
 		{
-			if(!_existingWorldNames.contains(worldNameFromConfig))
+			if (!_existingWorldNames.contains(worldNameFromConfig))
 			{
 				logger.severe("This world does not exist on your server! Disabling FoodDecay...");
 				return false;

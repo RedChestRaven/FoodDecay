@@ -15,5 +15,6 @@ public final class ConfigSettingNames
 	/*===================*
 	 | Advanced settings |
 	 *===================*/
+	public static final String useSimpleDecayCheck = "UseSimpleDecayCheck";
 	public static final String version = "Version";
 }

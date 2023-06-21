@@ -25,12 +25,12 @@ public final class FoodDecay extends JavaPlugin
 
 		// Create config if it doesn't exist already, since other parts require it
 		logger.info("Checking if config already exists...");
-		if(getDataFolder().exists() && (Set.of(getDataFolder().list()).contains("config.yml")))
+		if (getDataFolder().exists() && (Set.of(getDataFolder().list()).contains("config.yml")))
 		{
 			logger.info("Config found, verifying...");
 			String configVersion = getConfig().getString(ConfigSettingNames.version);
 			String pluginVersion = getDescription().getVersion().split("\\.")[0];
-			if(configVersion.equals(pluginVersion))
+			if (configVersion.equals(pluginVersion))
 			{
 				SetEnabled(new VerifyCommand(this).VerifyConfig());
 				if (_enabled)
@@ -56,26 +56,36 @@ public final class FoodDecay extends JavaPlugin
 			logger.info("Default config created!");
 		}
 
-		// Make Handlers and update their configs
-		logger.info("Starting handlers and updating their configs...");
-		DecayFoodHandler.GetInstance(this);
-		DecayPauseHandler.GetInstance(this);
-		logger.info("Handlers started with updated configs!");
-
 		// Add commands
 		logger.info("Setting up command listeners...");
 		Objects.requireNonNull(getCommand("fd verify")).setExecutor(new VerifyCommand(this));
 		Objects.requireNonNull(getCommand("fd reload")).setExecutor(new ReloadCommand(this));
 		logger.info("Command listeners set up!");
 
-		// Register events
-		logger.info("Registering events...");
-		Bukkit.getPluginManager().registerEvents(ObtainFoodListener.GetInstance(), this);
-		Bukkit.getPluginManager().registerEvents(TradeForFoodListener.GetInstance(), this);
-		Bukkit.getPluginManager().registerEvents(PauseDecayListener.GetInstance(), this);
-		logger.info("Events registered!");
+		if (getConfig().getBoolean(ConfigSettingNames.useSimpleDecayCheck))
+		{
+			logger.warning("Starting up simple decay check...");
+			if (SimpleDecayFoodHandler.StartInstance(this))
+				logger.info("Simple decay check started!");
+		}
+		else
+		{
+			logger.warning("Setting up advanced decay check...");
+			// Make Handlers and update their configs
+			logger.info("Starting handlers and updating their configs...");
+			DecayFoodHandler.GetInstance(this);
+			DecayPauseHandler.GetInstance(this);
+			logger.info("Handlers started with updated configs!");
 
-		if(_enabled)
+			// Register events
+			logger.info("Registering events...");
+			Bukkit.getPluginManager().registerEvents(ObtainFoodListener.GetInstance(), this);
+			Bukkit.getPluginManager().registerEvents(TradeForFoodListener.GetInstance(), this);
+			Bukkit.getPluginManager().registerEvents(PauseDecayListener.GetInstance(), this);
+			logger.info("Events registered!");
+		}
+
+		if (_enabled)
 			logger.info("Plugin is fully loaded, enjoy decaying food!");
 		else
 			logger.severe("Plugin has core functions disabled.");
