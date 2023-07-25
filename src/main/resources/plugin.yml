@@ -6,15 +6,17 @@ prefix: FoodDecay
 authors: [ RedChestRaven ]
 description: A small plugin to allow for all (vanilla) foods decaying
 commands:
-  fd verify:
+  fd:
+    description: The base command for FoodDecay.
+    permission: fooddecay.admin
+    permission-message: You don't have the right to wield this power!
+    aliases:
+      - fooddecay
+  fdverify:
     description: Used to make sure there's no errors in the config.
     permission: fooddecay.admin
     permission-message: You don't have the right to wield this power!
-    aliases:
-      - fdverify
-  fd reload:
+  fdreload:
     description: Used to reload changes made to the config. Make sure to verify it!
     permission: fooddecay.admin
     permission-message: You don't have the right to wield this power!
-    aliases:
-      - fdreload

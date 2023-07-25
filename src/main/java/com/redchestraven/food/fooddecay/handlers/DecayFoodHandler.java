@@ -69,66 +69,71 @@ public final class DecayFoodHandler
 	{
 		_decayCheckerTaskId = Bukkit.getScheduler().runTaskTimer(plugin,
 				() -> { // This is a lambda expression to create an anonymous Runnable.
-					if (FoodDecay._enabled)
+					if(FoodDecay._enabled)
 					{
-						Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
-						//logger.info("There are " + onlinePlayers.size() + " online players to check.");
-						for (Player player : onlinePlayers)
-						{
-							DecayInventory(player.getInventory());
-							DecayInventory(player.getEnderChest());
-						}
-						//logger.info("Players have been checked, and food has been decayed. Moving on to containers...");
-
-						for (String worldName: _activeWorlds)
-						{
-							Chunk[] loadedChunks = Bukkit.getWorld(worldName).getLoadedChunks();
-							//int totalEntitiesLoaded = 0;
-							for (Chunk chunk : loadedChunks)
-							{
-								if (chunk.isEntitiesLoaded())
-								{
-									// Looking for blocks with inventories. Not all of these are entities, like the furnace, so I
-									// need to use this method for those.
-									List<BlockState> containers = Arrays.stream(chunk.getTileEntities()).filter(_predicates.GetContainerChecker()).collect(Collectors.toList());
-									//totalEntitiesLoaded += containers.size();
-									if (containers.size() > 0)
-									{
-										//logger.info("There are " + containers.size() + " containers to check.");
-
-										for (BlockState container : containers)
-										{
-											//logger.info("Looking at a " + container.getType());
-											if (container instanceof InventoryHolder)
-												DecayInventory(((InventoryHolder) container).getInventory());
-											else
-												logger.warning("Can't check inventory of Blockstate: " + container.getType());
-										}
-									}
-
-									// Vehicles, however, are Entities and can be InventoryHolders, but won't have a BlockState,
-									// so I'm getting them this way.
-									Object[] entities = Arrays.stream(chunk.getEntities()).filter(_predicates.GetStorageEntityChecker()).toArray();
-									//totalEntitiesLoaded += entities.length;
-									if (entities.length > 0)
-									{
-										//logger.info("There are " + entities.length + " unchecked entities to check.");
-
-										for (Object entity : entities)
-										{
-											if (entity instanceof InventoryHolder)
-												DecayInventory(((InventoryHolder) entity).getInventory());
-										}
-									}
-								}
-							}
-							//logger.info("A total of " + totalEntitiesLoaded + " containers have been checked in " + loadedChunks.length + " loaded chunks, and food has been decayed.");
-						}
+						DecayCheck();
 					}
 				},
 				(_decayCheckInterval * 20L), // In server ticks. 1 second = 20 server ticks
 				(_decayCheckInterval * 20L) // In server ticks. 1 second = 20 server ticks
 		).getTaskId();
+	}
+
+	private static void DecayCheck()
+	{
+		Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
+		//logger.info("There are " + onlinePlayers.size() + " online players to check.");
+		for (Player player : onlinePlayers)
+		{
+			DecayInventory(player.getInventory());
+			DecayInventory(player.getEnderChest());
+		}
+		//logger.info("Players have been checked, and food has been decayed. Moving on to containers...");
+
+		for (String worldName: _activeWorlds)
+		{
+			Chunk[] loadedChunks = Bukkit.getWorld(worldName).getLoadedChunks();
+			//int totalEntitiesLoaded = 0;
+			for (Chunk chunk : loadedChunks)
+			{
+				if (chunk.isEntitiesLoaded())
+				{
+					// Looking for blocks with inventories. Not all of these are entities, like the furnace, so I
+					// need to use this method for those.
+					List<BlockState> containers = Arrays.stream(chunk.getTileEntities()).filter(_predicates.GetContainerChecker()).collect(Collectors.toList());
+					//totalEntitiesLoaded += containers.size();
+					if (containers.size() > 0)
+					{
+						//logger.info("There are " + containers.size() + " containers to check.");
+
+						for (BlockState container : containers)
+						{
+							//logger.info("Looking at a " + container.getType());
+							if (container instanceof InventoryHolder)
+								DecayInventory(((InventoryHolder) container).getInventory());
+							else
+								logger.warning("Can't check inventory of Blockstate: " + container.getType());
+						}
+					}
+
+					// Vehicles, however, are Entities and can be InventoryHolders, but won't have a BlockState,
+					// so I'm getting them this way.
+					Object[] entities = Arrays.stream(chunk.getEntities()).filter(_predicates.GetStorageEntityChecker()).toArray();
+					//totalEntitiesLoaded += entities.length;
+					if (entities.length > 0)
+					{
+						//logger.info("There are " + entities.length + " unchecked entities to check.");
+
+						for (Object entity : entities)
+						{
+							if (entity instanceof InventoryHolder)
+								DecayInventory(((InventoryHolder) entity).getInventory());
+						}
+					}
+				}
+			}
+			//logger.info("A total of " + totalEntitiesLoaded + " containers have been checked in " + loadedChunks.length + " loaded chunks, and food has been decayed.");
+		}
 	}
 
 	public static void UpdateConfig(FileConfiguration config)

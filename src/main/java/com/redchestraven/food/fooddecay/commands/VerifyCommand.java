@@ -1,14 +1,15 @@
 package com.redchestraven.food.fooddecay.commands;
 
-import com.redchestraven.food.fooddecay.FoodDecay;
 import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.entity.Player;
 import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
@@ -20,34 +21,33 @@ import java.util.stream.Collectors;
 
 public final class VerifyCommand implements CommandExecutor
 {
-	private final Logger logger;
-	private FileConfiguration _config;
-	private final JavaPlugin _plugin;
+	private static Logger logger = Logger.getLogger("FoodDecay");
+	private static JavaPlugin _plugin;
 
 	public VerifyCommand(JavaPlugin plugin)
 	{
-		logger = Logger.getLogger("FoodDecay");
-		_config = plugin.getConfig();
 		_plugin = plugin;
 	}
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args)
 	{
-		logger.info("Verifying loaded config...");
-		FoodDecay.SetEnabled(VerifyConfig());
+		if(args.length > 0)
+		{
+			logger.info("Command not recognised.");
+			return false;
+		}
 
-		if (FoodDecay._enabled)
-			logger.info("Config verified, enjoy FoodDecay!");
-		else
-			logger.severe("Config is incorrect, stopped FoodDecay...");
-
-		return true;
+		return VerifyConfig(_plugin, sender);
 	}
 
-	public boolean VerifyConfig()
+	public static boolean VerifyConfig(JavaPlugin plugin, CommandSender sender)
 	{
-		_config = _plugin.getConfig();
+		boolean sentByPlayer = sender instanceof Player;
+		logger.info("Verifying current config file...");
+		if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Verifying current config file..."); }
+
+		FileConfiguration _config = plugin.getConfig();
 
 		/*===============================*
 		 | Verifying decaying foods list |
@@ -58,6 +58,8 @@ public final class VerifyCommand implements CommandExecutor
 		if (_decayingFoodGroups == null || _decayingFoodGroups.getKeys(false).isEmpty())
 		{
 			logger.severe("The food groups list is empty, missing or isn't correctly written. Disabling FoodDecay...");
+			if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED
+					+ "The food groups list is empty, missing or isn't correctly written. Disabling FoodDecay..."); }
 			return false;
 		}
 		else
@@ -79,6 +81,8 @@ public final class VerifyCommand implements CommandExecutor
 						{
 							logger.severe("The rate of decay for food group " + _decayingFoodGroupName
 									+ "has an invalid value. It should be higher than 0, and recommended to be 120 for most servers. Disabling FoodDecay...");
+							if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The rate of decay for food group " + _decayingFoodGroupName
+									+ "has an invalid value. It should be higher than 0, and recommended to be 120 for most servers. Disabling FoodDecay..."); }
 							return false;
 						}
 					}
@@ -86,44 +90,53 @@ public final class VerifyCommand implements CommandExecutor
 				catch (NumberFormatException nfe)
 				{
 					logger.severe("The rate of decay is text, instead of a number. Disabling FoodDecay...");
+					if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The rate of decay is text, instead of a number. Disabling FoodDecay..."); }
 					return false;
 				}
 
 				//Check for food in this group not already existing in another group
-				List<String> _decayingFoods = _decayingFoodGroups.getStringList(_decayingFoodGroupName + "." + ConfigSettingNames.decayingFoods);
-				if (_decayingFoods == null || _decayingFoods.isEmpty())
+				List<String> decayingFoods = _decayingFoodGroups.getStringList(_decayingFoodGroupName + "." + ConfigSettingNames.decayingFoods);
+				if (decayingFoods.isEmpty())
 				{
 					logger.severe("The food group list " + _decayingFoodGroupName
 							+ " is empty, missing or isn't correctly written. Disabling FoodDecay...");
+					if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The food group list " + _decayingFoodGroupName
+							+ " is empty, missing or isn't correctly written. Disabling FoodDecay..."); }
 					return false;
 				}
 				else
 				{
-					for (String _decayingFoodName: _decayingFoods)
+					for (String decayingFoodName: decayingFoods)
 					{
-						//logger.info("Checking food " + _decayingFoodName);
-						if (!_decayingFoodNames.add(_decayingFoodName))
+						//logger.info("Checking food " + decayingFoodName);
+						if (!_decayingFoodNames.add(decayingFoodName))
 						{
-							logger.severe("The food " + _decayingFoodName
+							logger.severe("The food " + decayingFoodName
 									+ " is already present in a different group. Disabling FoodDecay...");
+							if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The food " + decayingFoodName
+									+ " is already present in a different group. Disabling FoodDecay..."); }
 							return false;
 						}
 
-						Material perishable = Material.getMaterial(_decayingFoodName.toUpperCase().replace(' ', '_'));
-						if (perishable == null)
+						Material decayingFoodMaterial = Material.getMaterial(decayingFoodName.toUpperCase().replace(' ', '_'));
+						if (decayingFoodMaterial == null)
 						{
-							logger.severe("The food " + _decayingFoodName + " isn't a Material. Disabling FoodDecay...");
+							logger.severe("The food " + decayingFoodName + " isn't a Material. Disabling FoodDecay...");
+							if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The food "
+									+ decayingFoodName + " isn't a Material. Disabling FoodDecay..."); }
 							return false;
 						}
-						else if (!perishable.isItem())
+						else if (!decayingFoodMaterial.isItem())
 						{
-							logger.severe("The food " + _decayingFoodName + " isn't an Item. Disabling FoodDecay...");
+							logger.severe("The food " + decayingFoodName + " isn't an Item. Disabling FoodDecay...");
+							if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The food "
+									+ decayingFoodName + " isn't an Item. Disabling FoodDecay..."); }
 							return false;
 						}
 						/* Disabling check for just edible foods, as there is stuff like wheat we might want to decay too...
-						else if(!perishable.isEdible())
+						else if(!decayingFoodMaterial.isEdible())
 						{
-							logger.severe("The food " + _decayingFoodName + " isn't edible. Disabling FoodDecay...");
+							logger.severe("The food " + decayingFoodName + " isn't edible. Disabling FoodDecay...");
 							return false;
 						}*/
 					}
@@ -135,31 +148,39 @@ public final class VerifyCommand implements CommandExecutor
 		 | Verifying decay stoppers list |
 		 *===============================*/
 		logger.info("Decaying foods verified, verifying decay stoppers...");
-		List<String> _decayStoppers = _config.getStringList(ConfigSettingNames.decayStoppers);
-		if (_decayStoppers.isEmpty())
+		List<String> decayStoppers = _config.getStringList(ConfigSettingNames.decayStoppers);
+		if (decayStoppers.isEmpty())
 		{
 			logger.severe("The decay stoppers list is empty, missing or isn't correctly written. Disabling FoodDecay...");
+			if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED
+					+ "The decay stoppers list is empty, missing or isn't correctly written. Disabling FoodDecay..."); }
 			return false;
 		}
 		else
 		{
-			for (String _decayStopperName: _decayStoppers)
+			for (String decayStopperName: decayStoppers)
 			{
-				//logger.info("Checking decaystopper " + _decayStopperName);
-				if (!_decayStopperName.toLowerCase().contains("ice"))
+				//logger.info("Checking decaystopper " + decayStopperName);
+				if (!decayStopperName.toLowerCase().contains("ice"))
 				{
-					logger.severe("The decaystopper " + _decayStopperName + " isn't a variant of ice. Disabling FoodDecay...");
+					logger.severe("The decaystopper " + decayStopperName + " isn't a variant of ice. Disabling FoodDecay...");
+					if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The decaystopper "
+							+ decayStopperName + " isn't a variant of ice. Disabling FoodDecay..."); }
 					return false;
 				}
-				Material perishable = Material.getMaterial(_decayStopperName.toUpperCase().replace(' ', '_'));
+				Material perishable = Material.getMaterial(decayStopperName.toUpperCase().replace(' ', '_'));
 				if (perishable == null)
 				{
-					logger.severe("The decaystopper " + _decayStopperName + " isn't a Material. Disabling FoodDecay...");
+					logger.severe("The decaystopper " + decayStopperName + " isn't a Material. Disabling FoodDecay...");
+					if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The decaystopper "
+							+ decayStopperName + " isn't a Material. Disabling FoodDecay..."); }
 					return false;
 				}
 				else if (!perishable.isBlock())
 				{
-					logger.severe("The decaystopper " + _decayStopperName + " isn't a block. Disabling FoodDecay...");
+					logger.severe("The decaystopper " + decayStopperName + " isn't a block. Disabling FoodDecay...");
+					if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The decaystopper "
+							+ decayStopperName + " isn't a block. Disabling FoodDecay..."); }
 					return false;
 				}
 			}
@@ -178,6 +199,8 @@ public final class VerifyCommand implements CommandExecutor
 				if (_decayInterval <= 0)
 				{
 					logger.severe("The interval has an invalid value. It should be higher than 0, and recommended to be 60 for most servers. Disabling FoodDecay...");
+					if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The interval has an invalid value."
+							+ "It should be higher than 0, and recommended to be 60 for most servers. Disabling FoodDecay..."); }
 					return false;
 				}
 			}
@@ -185,6 +208,7 @@ public final class VerifyCommand implements CommandExecutor
 		catch (NumberFormatException nfe)
 		{
 			logger.severe("The interval is text, instead of a number. Disabling FoodDecay...");
+			if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The interval is text, instead of a number. Disabling FoodDecay..."); }
 			return false;
 		}
 
@@ -199,10 +223,12 @@ public final class VerifyCommand implements CommandExecutor
 			if (!_existingWorldNames.contains(worldNameFromConfig))
 			{
 				logger.severe("This world does not exist on your server! Disabling FoodDecay...");
+				if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "This world does not exist on your server! Disabling FoodDecay..."); }
 				return false;
 			}
 		}
 
+		if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Config has been verified!"); }
 		return true;
 	}
 }
