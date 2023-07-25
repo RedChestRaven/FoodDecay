@@ -1,6 +1,7 @@
 package com.redchestraven.food.fooddecay;
 
 import com.redchestraven.food.fooddecay.commands.*;
+import com.redchestraven.food.fooddecay.consts.CommandNames;
 import com.redchestraven.food.fooddecay.consts.ConfigSettingNames;
 import com.redchestraven.food.fooddecay.handlers.*;
 import com.redchestraven.food.fooddecay.listeners.*;
@@ -32,7 +33,7 @@ public final class FoodDecay extends JavaPlugin
 			String pluginVersion = getDescription().getVersion().split("\\.")[0];
 			if (configVersion.equals(pluginVersion))
 			{
-				SetEnabled(new VerifyCommand(this).VerifyConfig());
+				SetEnabled(VerifyCommand.VerifyConfig(this, getServer().getConsoleSender()));
 				if (_enabled)
 					logger.info("Config entirely verified, moving on!");
 				else
@@ -58,8 +59,9 @@ public final class FoodDecay extends JavaPlugin
 
 		// Add commands
 		logger.info("Setting up command listeners...");
-		Objects.requireNonNull(getCommand("fd verify")).setExecutor(new VerifyCommand(this));
-		Objects.requireNonNull(getCommand("fd reload")).setExecutor(new ReloadCommand(this));
+		Objects.requireNonNull(getCommand(CommandNames.verifyShort)).setExecutor(new VerifyCommand(this));
+		Objects.requireNonNull(getCommand(CommandNames.reloadShort)).setExecutor(new ReloadCommand(this));
+		Objects.requireNonNull(getCommand(CommandNames.fdShort)).setExecutor(new BaseCommand(this));
 		logger.info("Command listeners set up!");
 
 		if (getConfig().getBoolean(ConfigSettingNames.useSimpleDecayCheck))
