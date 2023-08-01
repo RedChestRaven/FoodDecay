@@ -33,7 +33,7 @@ public final class FoodDecay extends JavaPlugin
 			String pluginVersion = getDescription().getVersion().split("\\.")[0];
 			if (configVersion.equals(pluginVersion))
 			{
-				SetEnabled(VerifyCommand.VerifyConfig(this, getServer().getConsoleSender()));
+				SetEnabled(VerifyCommand.VerifyConfig(getServer().getConsoleSender()));
 				if (_enabled)
 					logger.info("Config entirely verified, moving on!");
 				else
@@ -59,7 +59,7 @@ public final class FoodDecay extends JavaPlugin
 
 		// Add commands
 		logger.info("Setting up command listeners...");
-		Objects.requireNonNull(getCommand(CommandNames.verifyShort)).setExecutor(new VerifyCommand(this));
+		Objects.requireNonNull(getCommand(CommandNames.verifyShort)).setExecutor(new VerifyCommand());
 		Objects.requireNonNull(getCommand(CommandNames.reloadShort)).setExecutor(new ReloadCommand(this));
 		Objects.requireNonNull(getCommand(CommandNames.fdShort)).setExecutor(new BaseCommand(this));
 		logger.info("Command listeners set up!");

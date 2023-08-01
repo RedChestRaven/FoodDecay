@@ -24,9 +24,6 @@ public final class BaseCommand implements CommandExecutor
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args)
 	{
-		logger.warning("Label = " + label);
-		logger.warning("Command = " + command.getName());
-
 		if(args.length == 1)
 		{
 			if(args[0].compareToIgnoreCase(CommandNames.reloadBase) == 0)
@@ -37,7 +34,7 @@ public final class BaseCommand implements CommandExecutor
 
 			if(args[0].compareToIgnoreCase(CommandNames.verifyBase) == 0)
 			{
-				VerifyCommand.VerifyConfig(_plugin, sender);
+				VerifyCommand.VerifyConfig(sender);
 				return true;
 			}
 		}

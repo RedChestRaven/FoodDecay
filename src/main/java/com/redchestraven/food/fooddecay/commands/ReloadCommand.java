@@ -42,17 +42,18 @@ public final class ReloadCommand implements CommandExecutor
 	{
 		boolean sentByPlayer = sender instanceof Player;
 
-		logger.info("Config being reloaded...");
-		if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Config being reloaded..."); }
-		plugin.reloadConfig();
-		FileConfiguration config = plugin.getConfig();
-		logger.info("Config reloaded! Verifying...");
-		if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Config reloaded! Verifying..."); }
-		FoodDecay.SetEnabled(VerifyCommand.VerifyConfig(plugin, sender));
+		logger.info("Verifying config...");
+		if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Verifying config..."); }
+		FoodDecay.SetEnabled(VerifyCommand.VerifyConfig(sender));
 		if (FoodDecay._enabled)
 		{
-			logger.info("Config verified, applying changes!");
-			if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Config verified, applying changes!"); }
+			logger.info("Config verified, reloading...");
+			if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Config verified, reloading..."); }
+			plugin.reloadConfig();
+			FileConfiguration config = plugin.getConfig();
+
+			logger.info("Config reloaded, applying changes!");
+			if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Config reloaded, applying changes!"); }
 			if(config.getBoolean(ConfigSettingNames.useSimpleDecayCheck))
 			{
 				SimpleDecayFoodHandler.UpdateConfig(config);

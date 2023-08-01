@@ -9,11 +9,13 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.WorldInfo;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
+import java.io.FileReader;
 import java.util.HashSet;
 import java.util.List;
 import java.util.logging.Logger;
@@ -21,13 +23,7 @@ import java.util.stream.Collectors;
 
 public final class VerifyCommand implements CommandExecutor
 {
-	private static Logger logger = Logger.getLogger("FoodDecay");
-	private static JavaPlugin _plugin;
-
-	public VerifyCommand(JavaPlugin plugin)
-	{
-		_plugin = plugin;
-	}
+	private static Logger logger = Logger.getLogger("Server");
 
 	@Override
 	public boolean onCommand(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args)
@@ -38,16 +34,32 @@ public final class VerifyCommand implements CommandExecutor
 			return false;
 		}
 
-		return VerifyConfig(_plugin, sender);
+		return VerifyConfig(sender);
 	}
 
-	public static boolean VerifyConfig(JavaPlugin plugin, CommandSender sender)
+	public static boolean VerifyConfig(CommandSender sender)
 	{
 		boolean sentByPlayer = sender instanceof Player;
-		logger.info("Verifying current config file...");
-		if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Verifying current config file..."); }
+		logger.info("Verifying config file...");
+		if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_GREEN + "Verifying config file..."); }
 
-		FileConfiguration _config = plugin.getConfig();
+		FileConfiguration _config = null;
+		try{
+			FileReader configReader = new FileReader("plugins\\FoodDecay\\config.yml");
+			_config = YamlConfiguration.loadConfiguration(configReader);
+		}
+		catch(Exception e)
+		{
+			logger.severe("Config not found or can't be read for some reason. Please ensure the config" +
+					"exists and isn't opened in another program, then try again.");
+			if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "Config not found or can't be read for some reason." +
+					"Please ensure the config exists and isn't opened in another program, then try again."); }
+		}
+
+		if(_config == null)
+		{
+			return false;
+		}
 
 		/*===============================*
 		 | Verifying decaying foods list |
@@ -108,17 +120,18 @@ public final class VerifyCommand implements CommandExecutor
 				{
 					for (String decayingFoodName: decayingFoods)
 					{
+						decayingFoodName = decayingFoodName.toUpperCase().replace(' ', '_');
 						//logger.info("Checking food " + decayingFoodName);
 						if (!_decayingFoodNames.add(decayingFoodName))
 						{
 							logger.severe("The food " + decayingFoodName
-									+ " is already present in a different group. Disabling FoodDecay...");
+									+ " is present in a multiple groups. Disabling FoodDecay...");
 							if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The food " + decayingFoodName
-									+ " is already present in a different group. Disabling FoodDecay..."); }
+									+ " is present in a multiple groups. Disabling FoodDecay..."); }
 							return false;
 						}
 
-						Material decayingFoodMaterial = Material.getMaterial(decayingFoodName.toUpperCase().replace(' ', '_'));
+						Material decayingFoodMaterial = Material.getMaterial(decayingFoodName);
 						if (decayingFoodMaterial == null)
 						{
 							logger.severe("The food " + decayingFoodName + " isn't a Material. Disabling FoodDecay...");
