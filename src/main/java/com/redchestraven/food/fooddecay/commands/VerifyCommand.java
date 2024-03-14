@@ -12,7 +12,6 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
 import org.bukkit.generator.WorldInfo;
-import org.bukkit.plugin.java.JavaPlugin;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.FileReader;
@@ -125,9 +124,9 @@ public final class VerifyCommand implements CommandExecutor
 						if (!_decayingFoodNames.add(decayingFoodName))
 						{
 							logger.severe("The food " + decayingFoodName
-									+ " is present in a multiple groups. Disabling FoodDecay...");
+									+ " is present in multiple groups. Disabling FoodDecay...");
 							if(sentByPlayer) { sender.sendMessage(ChatColor.DARK_RED + "The food " + decayingFoodName
-									+ " is present in a multiple groups. Disabling FoodDecay..."); }
+									+ " is present in multiple groups. Disabling FoodDecay..."); }
 							return false;
 						}
 

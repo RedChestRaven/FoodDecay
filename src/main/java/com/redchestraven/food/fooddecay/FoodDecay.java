@@ -37,7 +37,7 @@ public final class FoodDecay extends JavaPlugin
 				if (_enabled)
 					logger.info("Config entirely verified, moving on!");
 				else
-					logger.severe("Config isn't entirely correct, please fix, reload and verify again to allow for decaying food.");
+					logger.severe("Config isn't entirely correct, please fix, reload, and verify again to allow for decaying food.");
 			}
 			else
 			{

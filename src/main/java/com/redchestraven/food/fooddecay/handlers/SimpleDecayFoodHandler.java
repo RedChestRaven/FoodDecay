@@ -74,18 +74,21 @@ public final class SimpleDecayFoodHandler
 						// Then set up decay
 						//logger.info("Starting simple decay check...");
 						Collection<? extends Player> onlinePlayers = Bukkit.getOnlinePlayers();
-						//logger.info("There are " + onlinePlayers.size() + " online players to check.");
+						int totalPlayerDecays = 0;
+						logger.info("There are " + onlinePlayers.size() + " online players to check.");
 						for (Player player : onlinePlayers)
 						{
-							DecayInventory(player.getInventory());
-							DecayInventory(player.getEnderChest());
+							totalPlayerDecays += DecayInventory(player.getInventory());
+							totalPlayerDecays += DecayInventory(player.getEnderChest());
 						}
-						//logger.info("Players have been checked, and food has been decayed. Moving on to containers...");
+						logger.info("Players have been checked, and " + totalPlayerDecays + " food stacks have been decayed. Moving on to containers...");
 
 						for (String worldName: _activeWorlds)
 						{
+							logger.info("Decaying food in containers in world " + worldName);
+							int totalWorldDecays = 0;
 							Chunk[] loadedChunks = Bukkit.getWorld(worldName).getLoadedChunks();
-							//int totalEntitiesLoaded = 0;
+							int totalEntitiesLoaded = 0;
 							for (Chunk chunk : loadedChunks)
 							{
 								if (chunk.isEntitiesLoaded())
@@ -93,7 +96,7 @@ public final class SimpleDecayFoodHandler
 									// Looking for blocks with inventories. Not all of these are entities, like the furnace, so I
 									// need to use this method for those.
 									List<BlockState> containers = Arrays.stream(chunk.getTileEntities()).filter(_predicates.GetContainerChecker()).collect(Collectors.toList());
-									//totalEntitiesLoaded += containers.size();
+									totalEntitiesLoaded += containers.size();
 									if (containers.size() > 0)
 									{
 										//logger.info("There are " + containers.size() + " containers to check.");
@@ -102,7 +105,7 @@ public final class SimpleDecayFoodHandler
 										{
 											//logger.info("Looking at a " + container.getType());
 											if (container instanceof InventoryHolder)
-												DecayInventory(((InventoryHolder) container).getInventory());
+												totalWorldDecays += DecayInventory(((InventoryHolder) container).getInventory());
 											else
 												logger.warning("Can't check inventory of Blockstate: " + container.getType());
 										}
@@ -117,11 +120,13 @@ public final class SimpleDecayFoodHandler
 									for (Object entity : entities)
 									{
 										if (entity instanceof InventoryHolder)
-											DecayInventory(((InventoryHolder) entity).getInventory());
+											totalWorldDecays += DecayInventory(((InventoryHolder) entity).getInventory());
 									}
 								}
 							}
-							//logger.info("A total of " + totalEntitiesLoaded + " containers have been checked in " + loadedChunks.length + " loaded chunks in world " + worldName + " , and food has been decayed.");
+							logger.info("A total of " + totalEntitiesLoaded + " containers have been checked in "
+									+ loadedChunks.length + " loaded chunks in world " + worldName + " , and "
+									+ totalWorldDecays + " food stacks have been decayed.");
 						}
 						//logger.info("Simple decay check finished.");
 					}
@@ -162,15 +167,16 @@ public final class SimpleDecayFoodHandler
 		StartRepeatingDecayCheck(_plugin);
 	}
 
-	private static void DecayInventory(Inventory inventory)
+	private static int DecayInventory(Inventory inventory)
 	{
+		int totalStacksDecayed = 0;
 		for (Material _decayStopper : _decayStoppers)
 		{
 			if (_decayStopper != null && inventory.contains(_decayStopper))
 			{
 				//logger.info("Food is put on ice, so pausing decay...");
 				PauseDecayInInventory(inventory);
-				return;
+				return totalStacksDecayed;
 			}
 		}
 
@@ -192,7 +198,7 @@ public final class SimpleDecayFoodHandler
 
 						if (decayingFoodStackPdc.has(CustomDataKeys.pausedTimeLeft, PersistentDataType.STRING))
 						{
-							logger.info("Applying PausedTimeLeft to expiration date..." + decayingFoodStackPdc.get(CustomDataKeys.pausedTimeLeft, PersistentDataType.STRING));
+							//logger.info("Applying PausedTimeLeft to expiration date..." + decayingFoodStackPdc.get(CustomDataKeys.pausedTimeLeft, PersistentDataType.STRING));
 							String[] splitPausedTimeLeft = decayingFoodStackPdc.get(CustomDataKeys.pausedTimeLeft, PersistentDataType.STRING).split("-");
 							LocalDateTime newDecayTimestamp = LocalDateTime.now().plusYears(Integer.parseInt(splitPausedTimeLeft[0]))
 									.plusMonths(Integer.parseInt(splitPausedTimeLeft[1]))
@@ -200,7 +206,7 @@ public final class SimpleDecayFoodHandler
 									.plusHours(Integer.parseInt(splitPausedTimeLeft[3]))
 									.plusMinutes(Integer.parseInt(splitPausedTimeLeft[4]))
 									.plusSeconds(Integer.parseInt(splitPausedTimeLeft[5]));
-							logger.warning("New expirationdate: " + newDecayTimestamp.format(Formatters.internalTimeFormat));
+							//logger.warning("New expirationdate: " + newDecayTimestamp.format(Formatters.internalTimeFormat));
 							decayingFoodStackPdc.set(CustomDataKeys.expirationDate, PersistentDataType.STRING, newDecayTimestamp.format(Formatters.internalTimeFormat));
 							decayingFoodStackPdc.remove(CustomDataKeys.pausedTimeLeft);
 
@@ -226,7 +232,7 @@ public final class SimpleDecayFoodHandler
 
 							decayingFoodStackMeta.setLore(lore);
 							decayingFoodStack.setItemMeta(decayingFoodStackMeta);
-							logger.info("Expiration date at " + newDecayTimestamp.format(Formatters.loreTimeFormat) + " stored!");
+							//logger.info("Expiration date at " + newDecayTimestamp.format(Formatters.loreTimeFormat) + " stored!");
 						}
 						else
 						{
@@ -234,15 +240,16 @@ public final class SimpleDecayFoodHandler
 							{
 								if (CheckIfTimestampExpired(decayingFoodStackPdc.get(CustomDataKeys.expirationDate, PersistentDataType.STRING)))
 								{
-									logger.info("Rotting food found, converting...");
+									//logger.info("Rotting food found, converting...");
 									_rottenFood.setAmount(decayingFoodStack.getAmount());
 									inventory.setItem(decayingFoodStackKey, _rottenFood);
-									logger.info("Food is now rotten!");
+									totalStacksDecayed++;
+									//logger.info("Food is now rotten!");
 								}
 							}
 							else
 							{
-								logger.info("There is no expiration date stored yet...");
+								//logger.info("There is no expiration date stored yet...");
 								LocalDateTime decayTimestamp = LocalDateTime.now().plusSeconds(decayingFoodGroup.GetRateOfDecay());
 								decayingFoodStackPdc.set(CustomDataKeys.expirationDate, PersistentDataType.STRING, decayTimestamp.format(Formatters.internalTimeFormat));
 
@@ -251,13 +258,14 @@ public final class SimpleDecayFoodHandler
 								lore.add(ChatColor.DARK_GREEN + decayTimestamp.format(Formatters.loreTimeFormat));
 								decayingFoodStackMeta.setLore(lore);
 								decayingFoodStack.setItemMeta(decayingFoodStackMeta);
-								logger.info("Expiration date of " + decayingFoodGroup.GetRateOfDecay() + " seconds stored!");
+								//logger.info("Expiration date of " + decayingFoodGroup.GetRateOfDecay() + " seconds stored!");
 							}
 						}
 					}
 				}
 			}
 		}
+		return totalStacksDecayed;
 	}
 
 	private static void PauseDecayInInventory(Inventory inventory)
@@ -288,12 +296,12 @@ public final class SimpleDecayFoodHandler
 
 						if (foodPdc.has(CustomDataKeys.expirationDate, PersistentDataType.STRING))
 						{
-							logger.info("Food already has an expirationDate, pausing ...");
+							//logger.info("Food already has an expirationDate, pausing ...");
 							String[] decayTimestampStringified = foodPdc.get(CustomDataKeys.expirationDate, PersistentDataType.STRING).split("-");
-							logger.warning("Setting paused time left before decay...");
+							//logger.warning("Setting paused time left before decay...");
 							LocalDateTime now = LocalDateTime.now();
-							logger.info("Now: " + LocalDateTime.now().format(Formatters.internalTimeFormat));
-							logger.info("Time of decay: " + foodPdc.get(CustomDataKeys.expirationDate, PersistentDataType.STRING));
+							//logger.info("Now: " + LocalDateTime.now().format(Formatters.internalTimeFormat));
+							//logger.info("Time of decay: " + foodPdc.get(CustomDataKeys.expirationDate, PersistentDataType.STRING));
 							LocalDateTime decayTimestamp = LocalDateTime.of(Integer.parseInt(decayTimestampStringified[0]),
 									Integer.parseInt(decayTimestampStringified[1]),
 									Integer.parseInt(decayTimestampStringified[2]),
@@ -302,9 +310,9 @@ public final class SimpleDecayFoodHandler
 									Integer.parseInt(decayTimestampStringified[5]));
 							String pausedTimeLeft = getPausedTimeLeftAsString(now, decayTimestamp);
 
-							logger.info("Paused time left before decay: " + pausedTimeLeft);
+							//logger.info("Paused time left before decay: " + pausedTimeLeft);
 							foodPdc.set(CustomDataKeys.pausedTimeLeft, PersistentDataType.STRING, pausedTimeLeft);
-							logger.info("Paused time left cdk: " + foodPdc.get(CustomDataKeys.pausedTimeLeft, PersistentDataType.STRING));
+							//logger.info("Paused time left cdk: " + foodPdc.get(CustomDataKeys.pausedTimeLeft, PersistentDataType.STRING));
 
 							int loreLineToAdjust = -1;
 							for (int i = 0; i < lore.size(); i++)
@@ -319,7 +327,7 @@ public final class SimpleDecayFoodHandler
 								lore.set(loreLineToAdjust, ChatColor.DARK_GREEN + "Decay paused.");
 							foodMeta.setLore(lore);
 							foodStack.setItemMeta(foodMeta);
-							logger.info("Food has been paused.");
+							//logger.info("Food has been paused.");
 							continue;
 						}
 
@@ -382,7 +390,7 @@ public final class SimpleDecayFoodHandler
 		String[] foodDecayTimestamp = _foodDecayTimestamp.split("-");
 
 		LocalDateTime now = LocalDateTime.now();
-		logger.info("Now: " + now.format(Formatters.internalTimeFormat));
+		//logger.info("Now: " + now.format(Formatters.internalTimeFormat));
 		LocalDateTime decayTimestamp = LocalDateTime.of(
 				Integer.parseInt(foodDecayTimestamp[0]),	//Year
 				Integer.parseInt(foodDecayTimestamp[1]),	//Month
@@ -390,7 +398,7 @@ public final class SimpleDecayFoodHandler
 				Integer.parseInt(foodDecayTimestamp[3]),	//Hour
 				Integer.parseInt(foodDecayTimestamp[4]),	//Minute
 				Integer.parseInt(foodDecayTimestamp[5]));	//Second
-		logger.info("ExpirationTime: " + decayTimestamp.format(Formatters.internalTimeFormat));
+		//logger.info("ExpirationTime: " + decayTimestamp.format(Formatters.internalTimeFormat));
 
 		return decayTimestamp.isBefore(now);
 	}
